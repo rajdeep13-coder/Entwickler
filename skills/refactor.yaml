@@ -1,0 +1,35 @@
+name: refactor
+version: "1.0.0"
+description: >
+  Identifies and refactors code smells: functions that are too long, duplicated logic,
+  poor naming, missing type hints, or overly complex conditionals.
+priority: medium
+category: architecture
+
+triggers:
+  - when_no_critical_bugs
+
+assessment_dimensions:
+  - name: function_length
+    description: Functions over 50 lines should be split
+    threshold: 50
+
+  - name: duplication
+    description: Repeated code blocks (>5 lines identical) should be extracted
+
+  - name: type_hints
+    description: All public functions should have type annotations
+
+  - name: naming
+    description: Variable/function names should be descriptive and unambiguous
+
+output_format:
+  type: json
+  schema:
+    priority: "medium|low"
+    category: "architecture"
+    title: "Short description of refactor"
+    rationale: "Why this improves the codebase"
+    approach: "Specific refactoring steps"
+    files_to_modify: ["list", "of", "files"]
+    test_strategy: "How to verify refactor doesn't change behavior"
