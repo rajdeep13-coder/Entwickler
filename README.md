@@ -1,10 +1,21 @@
-# Entwickler 🤖⚡
+# Entwickler
 
-> *A self-evolving coding agent that writes, tests, and improves its own code — autonomously.*
+> A self-evolving coding agent that writes, tests, and improves its own code — autonomously.
 
 [![Evolve](https://github.com/rajdeep13-coder/Entwickler/actions/workflows/evolve.yml/badge.svg)](https://github.com/rajdeep13-coder/Entwickler/actions/workflows/evolve.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub Stars](https://img.shields.io/github/stars/rajdeep13-coder/Entwickler?style=social)](https://github.com/rajdeep13-coder/Entwickler/stargazers)
+[![GitHub Forks](https://img.shields.io/github/forks/rajdeep13-coder/Entwickler?style=social)](https://github.com/rajdeep13-coder/Entwickler/network/members)
+[![GitHub Issues](https://img.shields.io/github/issues/rajdeep13-coder/Entwickler)](https://github.com/rajdeep13-coder/Entwickler/issues)
+[![Last Commit](https://img.shields.io/github/last-commit/rajdeep13-coder/Entwickler)](https://github.com/rajdeep13-coder/Entwickler/commits/main)
+
+---
+
+**[Fork this repo](https://github.com/rajdeep13-coder/Entwickler/fork)** &nbsp;|&nbsp;
+**[Open an issue](https://github.com/rajdeep13-coder/Entwickler/issues/new)** &nbsp;|&nbsp;
+**[View the journal](JOURNAL.md)** &nbsp;|&nbsp;
+**[Watch it evolve](https://github.com/rajdeep13-coder/Entwickler/commits/main)**
 
 ---
 
@@ -19,43 +30,43 @@ Every few hours, Entwickler wakes up via GitHub Actions, reads its own source co
 ## How It Works
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                  GitHub Actions (cron)                   │
-│                    every 4 hours                         │
-└──────────────────────────┬──────────────────────────────┘
-                           │
-                    ┌──────▼──────┐
-                    │  Read Self  │  ← .py files, IDENTITY.md,
-                    │             │    JOURNAL.md, GitHub Issues
-                    └──────┬──────┘
-                           │
-                    ┌──────▼──────┐
-                    │  Assess &   │  ← LLM self-critique via
-                    │  Prioritize │    skills/self_assess.yaml
-                    └──────┬──────┘
-                           │
-                    ┌──────▼──────┐
-                    │  Generate   │  ← Unified diff patch or
-                    │  Patch      │    full-file rewrite
-                    └──────┬──────┘
-                           │
-                    ┌──────▼──────┐
-                    │  Apply on   │  ← feature branch
-                    │  Branch     │    evolve/attempt-XYZ
-                    └──────┬──────┘
-                           │
-                    ┌──────▼──────┐
-                    │  Run Tests  │  ← pytest + ruff + black
-                    │  & Lint     │
-                    └──────┬──────┘
-                     pass? │ fail?
-              ┌────────────┘────────────┐
-              │                         │
-       ┌──────▼──────┐           ┌──────▼──────┐
-       │  Merge to   │           │  Revert &   │
-       │  main +     │           │  Log to     │
-       │  Commit     │           │  JOURNAL.md │
-       └─────────────┘           └─────────────┘
++-------------------------------------------------------------+
+|                  GitHub Actions (cron)                      |
+|                    every 4 hours                            |
++-----------------------------+-------------------------------+
+                              |
+                       +------v------+
+                       |  Read Self  |  <- .py files, IDENTITY.md,
+                       |             |     JOURNAL.md, GitHub Issues
+                       +------+------+
+                              |
+                       +------v------+
+                       |  Assess &   |  <- LLM self-critique via
+                       |  Prioritize |     skills/self_assess.yaml
+                       +------+------+
+                              |
+                       +------v------+
+                       |  Generate   |  <- Unified diff patch or
+                       |  Patch      |     full-file rewrite
+                       +------+------+
+                              |
+                       +------v------+
+                       |  Apply on   |  <- feature branch
+                       |  Branch     |     evolve/attempt-XYZ
+                       +------+------+
+                              |
+                       +------v------+
+                       |  Run Tests  |  <- pytest + ruff + black
+                       |  & Lint     |
+                       +------+------+
+                        pass? | fail?
+              +---------------+--------------+
+              |                              |
+       +------v------+              +--------v----+
+       |  Merge to   |              |  Revert &   |
+       |  main +     |              |  Log to     |
+       |  Commit     |              |  JOURNAL.md |
+       +-------------+              +-------------+
 ```
 
 ### Core Rules
@@ -82,7 +93,7 @@ pip install -r requirements.txt
 
 ### 3. Configure Secrets
 
-Add these secrets to your GitHub repository (`Settings → Secrets → Actions`):
+Add these secrets to your GitHub repository (`Settings -> Secrets -> Actions`):
 
 | Secret | Description |
 |--------|-------------|
@@ -119,17 +130,17 @@ Or check the `JOURNAL.md` for a narrative history of every evolution attempt.
 
 ```
 Entwickler/
-├── entwickler.py          # Main agent bootstrap (self-modifying)
-├── IDENTITY.md            # Agent constitution & goals
-├── JOURNAL.md             # Auto-generated evolution history
-├── requirements.txt       # Python dependencies
-├── test_entwickler.py     # Initial test suite (grows over time)
-├── skills/
-│   ├── self_assess.yaml   # Self-assessment skill definition
-│   └── *.yaml             # More skills added by agent over time
-└── .github/
-    └── workflows/
-        └── evolve.yml     # GitHub Actions cron job
++-- entwickler.py          # Main agent bootstrap (self-modifying)
++-- IDENTITY.md            # Agent constitution & goals
++-- JOURNAL.md             # Auto-generated evolution history
++-- requirements.txt       # Python dependencies
++-- test_entwickler.py     # Initial test suite (grows over time)
++-- skills/
+|   +-- self_assess.yaml   # Self-assessment skill definition
+|   +-- *.yaml             # More skills added by agent over time
++-- .github/
+    +-- workflows/
+        +-- evolve.yml     # GitHub Actions cron job
 ```
 
 ---
@@ -138,12 +149,12 @@ Entwickler/
 
 Entwickler uses [LiteLLM](https://github.com/BerriAI/litellm) for a unified multi-provider interface:
 
-- 🟣 **Anthropic Claude** (claude-3-5-sonnet, claude-3-opus)
-- 🔵 **Google Gemini** (gemini-1.5-pro, gemini-2.0-flash)
-- 🟡 **Groq** (llama-3.1-70b, llama-3.1-405b) — fastest, cheapest
-- 🟠 **DeepSeek** (deepseek-coder, deepseek-chat)
-- 🔴 **Mistral** (mistral-large, codestral)
-- 🟢 **Cohere** (command-r-plus)
+- **Anthropic Claude** (claude-3-5-sonnet, claude-3-opus)
+- **Google Gemini** (gemini-1.5-pro, gemini-2.0-flash)
+- **Groq** (llama-3.1-70b, llama-3.1-405b) — fastest, cheapest
+- **DeepSeek** (deepseek-coder, deepseek-chat)
+- **Mistral** (mistral-large, codestral)
+- **Cohere** (command-r-plus)
 
 The agent auto-selects providers based on cost/availability and falls back gracefully.
 
@@ -177,6 +188,38 @@ ls skills/
 # Run the test suite to see how far it's come
 pytest test_entwickler.py -v
 ```
+
+---
+
+## FAQ
+
+### Is it fully working?
+
+Yes — with at least one LLM API key configured, the agent will run a complete evolution cycle:
+it reads its own source, asks the LLM to identify one improvement, generates a patch, applies
+it on a feature branch, runs `pytest` and `ruff`, and either merges to `main` (on success) or
+reverts and writes the failure to `JOURNAL.md`. The bootstrap version is deliberately small and
+conservative; it grows from there.
+
+Set at least one of `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, or `GROQ_API_KEY` in your repo
+secrets, then trigger the workflow manually from the Actions tab to see the first run.
+
+### Can I deploy it to GitHub Pages?
+
+No — this is a Python CLI agent, not a web application. GitHub Pages serves static HTML/CSS/JS
+and cannot run a Python process. The agent runs entirely inside GitHub Actions workers. The
+`JOURNAL.md` and `README.md` serve as the "live dashboard" you can read on GitHub without
+any separate deployment.
+
+### How do I suggest an improvement?
+
+Open a GitHub Issue and add the `agent-input` label. The agent reads these issues on every
+waking cycle and decides whether to act on the suggestion.
+
+### Why does the agent pick small changes?
+
+Small changes have a high probability of passing tests. The agent compounds many small correct
+changes rather than making one large risky change that is likely to fail.
 
 ---
 

@@ -7,7 +7,7 @@ New entries are prepended (newest first).
 
 ---
 
-## 🌱 Bootstrap — Initial Deployment
+## Bootstrap — Initial Deployment
 
 **Timestamp**: 2026-03-06 00:00:00 UTC  
 **Status**: BOOTSTRAP  
@@ -47,6 +47,6 @@ The first autonomous evolution cycle will wake up, read this context, and choose
 the single most valuable improvement to make. It will test it, and if everything
 passes, commit it to main.
 
-Watch the commits. 🚀
+Watch the commits.
 
 ---

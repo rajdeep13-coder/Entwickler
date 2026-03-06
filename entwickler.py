@@ -600,7 +600,7 @@ def run_tests() -> tuple[bool, str]:
     )
     output = stdout + stderr
     passed = code == 0
-    log.info(f"Tests {'PASSED ✅' if passed else 'FAILED ❌'}")
+    log.info(f"Tests {'PASSED' if passed else 'FAILED'}")
     return passed, output
 
 
@@ -611,7 +611,7 @@ def run_lint() -> tuple[bool, str]:
     )
     output = stdout + stderr
     passed = code == 0
-    log.info(f"Lint {'PASSED ✅' if passed else 'FAILED ❌'}")
+    log.info(f"Lint {'PASSED' if passed else 'FAILED'}")
     return passed, output
 
 
@@ -622,7 +622,7 @@ def run_format_check() -> tuple[bool, str]:
     )
     output = stdout + stderr
     passed = code == 0
-    log.info(f"Format check {'PASSED ✅' if passed else 'FAILED ❌'}")
+    log.info(f"Format check {'PASSED' if passed else 'FAILED'}")
     return passed, output
 
 
@@ -736,11 +736,11 @@ def journal_entry(
 ) -> None:
     """Append a structured entry to JOURNAL.md."""
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
-    status_emoji = "✅" if success else "❌"
+    status_label = "SUCCESS" if success else "FAILURE"
 
     entry_lines = [
         "\n---\n",
-        f"## {status_emoji} Evolution Attempt — {attempt_id}\n",
+        f"## Evolution Attempt [{status_label}] — {attempt_id}\n",
         f"**Timestamp**: {timestamp}  \n",
         f"**Status**: {'SUCCESS' if success else 'FAILURE'}  \n",
         f"**Priority**: {assessment.get('priority', '?').upper()}  \n",
@@ -754,8 +754,8 @@ def journal_entry(
         entry_lines.append(f"\n### Patch Summary\n```\n{patch_summary}\n```\n")
 
     for check_name, (passed, output) in check_results.items():
-        icon = "✅" if passed else "❌"
-        entry_lines.append(f"\n### {check_name.title()} {icon}\n```\n{output[:CHECK_OUTPUT_MAX_CHARS]}\n```\n")
+        label = "PASS" if passed else "FAIL"
+        entry_lines.append(f"\n### {check_name.title()} [{label}]\n```\n{output[:CHECK_OUTPUT_MAX_CHARS]}\n```\n")
 
     if error:
         entry_lines.append(f"\n### Error\n```\n{error}\n```\n")
@@ -867,7 +867,7 @@ def evolution_cycle() -> bool:
             run_command(["git", "push", "origin", "main"])
 
             git_delete_branch(branch_name)
-            console.print(Panel(f"[bold green]✅ Evolution {attempt_id} succeeded![/bold green]\n{assessment.get('title', '')}", expand=False))
+            console.print(Panel(f"[bold green]Evolution {attempt_id} succeeded![/bold green]\n{assessment.get('title', '')}", expand=False))
             return True
 
         else:
@@ -897,7 +897,7 @@ def evolution_cycle() -> bool:
             run_command(["git", "commit", "-m", f"docs: journal failure entry for {attempt_id}"])
             run_command(["git", "push", "origin", original_branch])
 
-            console.print(Panel(f"[bold red]❌ Evolution {attempt_id} failed — reverted[/bold red]\n{failure_details[:200]}", expand=False))
+            console.print(Panel(f"[bold red]Evolution {attempt_id} failed — reverted[/bold red]\n{failure_details[:200]}", expand=False))
             return False
 
     except Exception as e:
@@ -932,7 +932,7 @@ def evolution_cycle() -> bool:
         except Exception:
             pass
 
-        console.print(Panel(f"[bold red]💥 Evolution {attempt_id} crashed[/bold red]\n{str(e)[:200]}", expand=False))
+        console.print(Panel(f"[bold red]Evolution {attempt_id} crashed[/bold red]\n{str(e)[:200]}", expand=False))
         return False
 
 
