@@ -645,16 +645,6 @@ def run_all_checks() -> tuple[bool, dict[str, tuple[bool, str]]]:
 # ---------------------------------------------------------------------------
 
 
-def git_create_branch(branch_name: str) -> bool:
-    """Create and checkout a new git branch."""
-    code, _, stderr = run_command(["git", "checkout", "-b", branch_name])
-    if code != 0:
-        log.error(f"Failed to create branch {branch_name}: {stderr}")
-        return False
-    log.info(f"Created branch: {branch_name}")
-    return True
-
-
 def git_commit_and_push(message: str, files: list[str]) -> bool:
     """Stage files, commit, and push to origin."""
     # Stage files
@@ -678,34 +668,6 @@ def git_commit_and_push(message: str, files: list[str]) -> bool:
 
     log.info(f"Committed: {message}")
     return True
-
-
-def git_merge_to_main(branch_name: str) -> bool:
-    """Merge feature branch to main."""
-    # Checkout main
-    code, _, stderr = run_command(["git", "checkout", "main"])
-    if code != 0:
-        log.error(f"Failed to checkout main: {stderr}")
-        return False
-
-    # Merge
-    code, _, stderr = run_command(["git", "merge", "--no-ff", branch_name, "-m", f"chore: merge {branch_name}"])
-    if code != 0:
-        log.error(f"Failed to merge {branch_name}: {stderr}")
-        return False
-
-    # Push main
-    code, _, stderr = run_command(["git", "push", "origin", "main"])
-    if code != 0:
-        log.warning(f"Push to main failed: {stderr}")
-
-    log.info(f"Merged {branch_name} to main")
-    return True
-
-
-def git_delete_branch(branch_name: str) -> None:
-    """Delete a local branch (cleanup)."""
-    run_command(["git", "branch", "-D", branch_name])
 
 
 def get_current_branch() -> str:
