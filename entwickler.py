@@ -716,8 +716,8 @@ def get_current_branch() -> str:
 
 def git_configure_user() -> None:
     """Set git user identity for Actions environment."""
-    run_command(["git", "config", "user.email", "entwickler-agent@users.noreply.github.com"])
-    run_command(["git", "config", "user.name", "Entwickler Agent"])
+    run_command(["git", "config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com"])
+    run_command(["git", "config", "user.name", "github-actions[bot]"])
 
 
 # ---------------------------------------------------------------------------
@@ -789,33 +789,31 @@ def evolution_cycle() -> bool:
     1. Build context (read self + environment)
     2. Self-assess (choose one improvement)
     3. Generate patch
-    4. Apply patch on feature branch
+    4. Apply patch directly on main
     5. Run tests + lint
-    6. Merge to main (on success) or revert + log (on failure)
+    6. Commit and push to main (on success) or revert in-place + log (on failure)
 
     Returns True if evolution succeeded, False otherwise.
     """
     attempt_id = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
-    branch_name = f"evolve/attempt-{attempt_id}"
     assessment: dict[str, Any] = {}
     check_results: dict[str, tuple[bool, str]] = {}
     backups: dict[str, str] = {}
-    original_branch = get_current_branch()
 
     console.print(Panel(f"[bold green]Entwickler Evolution Cycle[/bold green]\nAttempt: {attempt_id}", expand=False))
 
     try:
         # Step 1: Build context
-        log.info("Step 1/6: Building context...")
+        log.info("Step 1/5: Building context...")
         context = build_context()
         log.info(f"Context: {len(context['sources'])} source files, {len(context['skills'])} skills, {len(context['issues'])} issues")
 
         # Step 2: Self-assess
-        log.info("Step 2/6: Self-assessing...")
+        log.info("Step 2/5: Self-assessing...")
         assessment = self_assess(context)
 
         # Step 3: Generate patch
-        log.info("Step 3/6: Generating patch...")
+        log.info("Step 3/5: Generating patch...")
         patches = generate_patch(assessment, context["sources"])
 
         if not patches:
@@ -832,26 +830,20 @@ def evolution_cycle() -> bool:
         patch_summary = "\n".join(f"  {f}: {len(c)} chars" for f, c in patches.items())
         log.info(f"Patches generated:\n{patch_summary}")
 
-        # Step 4: Create feature branch and apply patches
-        log.info("Step 4/6: Applying patches on feature branch...")
+        # Step 4: Apply patches directly on main (in-place)
+        log.info("Step 4/5: Applying patches directly on main...")
         git_configure_user()
-        if not git_create_branch(branch_name):
-            raise RuntimeError(f"Could not create branch {branch_name}")
-
         backups = apply_patches(patches)
 
-        # Stage and commit on feature branch
-        commit_msg = f"evolve({assessment.get('category', 'misc')}): {assessment.get('title', 'improvement')}"
-        git_commit_and_push(commit_msg, list(patches.keys()) + [str(JOURNAL_FILE.relative_to(REPO_ROOT))])
-
         # Step 5: Run tests + lint
-        log.info("Step 5/6: Running checks...")
+        log.info("Step 5/5: Running checks...")
         all_passed, check_results = run_all_checks()
 
-        # Step 6: Merge or revert
+        # Commit directly or revert in-place
         if all_passed:
-            log.info("Step 6/6: All checks PASSED — merging to main...")
-            git_merge_to_main(branch_name)
+            log.info("All checks PASSED — committing directly to main...")
+            commit_msg = f"evolve({assessment.get('category', 'misc')}): {assessment.get('title', 'improvement')}"
+            git_commit_and_push(commit_msg, list(patches.keys()))
 
             journal_entry(
                 attempt_id=attempt_id,
@@ -866,17 +858,15 @@ def evolution_cycle() -> bool:
             run_command(["git", "commit", "-m", f"docs: journal entry for {attempt_id}"])
             run_command(["git", "push", "origin", "main"])
 
-            git_delete_branch(branch_name)
             console.print(Panel(f"[bold green]Evolution {attempt_id} succeeded![/bold green]\n{assessment.get('title', '')}", expand=False))
             return True
 
         else:
-            log.warning("Step 6/6: Checks FAILED — reverting...")
-            revert_patches(backups)
-
-            # Switch back to original branch
-            run_command(["git", "checkout", original_branch])
-            git_delete_branch(branch_name)
+            log.warning("Checks FAILED — reverting in-place...")
+            try:
+                revert_patches(backups)
+            except Exception as revert_err:
+                log.error(f"Revert failed: {revert_err}")
 
             failure_details = "\n".join(
                 f"{k}: {'PASS' if v[0] else 'FAIL'}\n{v[1][:500]}"
@@ -892,10 +882,10 @@ def evolution_cycle() -> bool:
                 patch_summary=patch_summary,
             )
 
-            # Commit journal on original branch
+            # Commit journal on main
             run_command(["git", "add", str(JOURNAL_FILE.relative_to(REPO_ROOT))])
             run_command(["git", "commit", "-m", f"docs: journal failure entry for {attempt_id}"])
-            run_command(["git", "push", "origin", original_branch])
+            run_command(["git", "push", "origin", "main"])
 
             console.print(Panel(f"[bold red]Evolution {attempt_id} failed — reverted[/bold red]\n{failure_details[:200]}", expand=False))
             return False
@@ -911,11 +901,6 @@ def evolution_cycle() -> bool:
             except Exception as revert_err:
                 log.error(f"Revert also failed: {revert_err}")
 
-        # Return to original branch
-        run_command(["git", "checkout", original_branch])
-        if branch_name != original_branch:
-            git_delete_branch(branch_name)
-
         journal_entry(
             attempt_id=attempt_id,
             assessment=assessment or {"title": "Unknown", "category": "error", "priority": "unknown"},
@@ -928,7 +913,7 @@ def evolution_cycle() -> bool:
         try:
             run_command(["git", "add", str(JOURNAL_FILE.relative_to(REPO_ROOT))])
             run_command(["git", "commit", "-m", f"docs: journal error entry for {attempt_id}"])
-            run_command(["git", "push", "origin", original_branch])
+            run_command(["git", "push", "origin", "main"])
         except Exception:
             pass
 
