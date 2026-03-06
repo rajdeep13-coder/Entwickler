@@ -1,0 +1,35 @@
+name: optimize
+version: "1.0.0"
+description: >
+  Identifies performance bottlenecks including unnecessary LLM calls,
+  inefficient loops, repeated file I/O, and token waste.
+priority: low
+category: performance
+
+triggers:
+  - when_no_higher_priority_improvements
+  - after_20_evolutions
+
+assessment_dimensions:
+  - name: llm_efficiency
+    description: Are LLM calls minimized? Is context compressed before sending?
+
+  - name: file_io
+    description: Are files read multiple times unnecessarily?
+
+  - name: token_usage
+    description: Is the prompt as concise as possible while preserving accuracy?
+
+  - name: caching
+    description: Are expensive computations cached?
+
+output_format:
+  type: json
+  schema:
+    priority: "low|medium"
+    category: "performance"
+    title: "Optimize <specific bottleneck>"
+    rationale: "Measured or estimated impact of this optimization"
+    approach: "Specific optimization technique"
+    files_to_modify: ["list", "of", "files"]
+    test_strategy: "How to verify performance improvement without breaking behavior"

@@ -1,0 +1,117 @@
+# self_assess.yaml — Core self-assessment skill for Entwickler
+#
+# This skill guides the agent to critically analyze its own codebase
+# and identify the highest-value improvement to make next.
+#
+# Priority levels: critical > high > medium > low
+# Categories: bug | security | architecture | test | performance | ux | feature
+
+name: self_assess
+version: "1.0.0"
+description: >
+  Performs a comprehensive self-assessment of the entire codebase, journal history,
+  and open issues to identify the single most valuable improvement for this cycle.
+priority: high
+category: meta
+
+# When this skill should be invoked
+triggers:
+  - always  # runs every cycle as the primary decision-making skill
+
+# Assessment dimensions — the agent evaluates each before deciding
+assessment_dimensions:
+  - name: correctness
+    weight: 10
+    description: Are there bugs, logic errors, or incorrect behavior?
+    questions:
+      - Does any function have incorrect error handling?
+      - Are there unhandled edge cases that could crash the agent?
+      - Are there off-by-one errors or incorrect string parsing?
+
+  - name: security
+    weight: 9
+    description: Are there security vulnerabilities or unsafe operations?
+    questions:
+      - Is any external input unsanitized?
+      - Are API keys or secrets accidentally logged?
+      - Is there arbitrary code execution from LLM output?
+
+  - name: architecture
+    weight: 7
+    description: Is the code structure clean, modular, and maintainable?
+    questions:
+      - Are functions too long (>50 lines)?
+      - Is there repeated code that should be extracted?
+      - Are there circular dependencies or tight coupling?
+
+  - name: test_coverage
+    weight: 8
+    description: Is the code adequately tested?
+    questions:
+      - Are there functions with no test coverage?
+      - Do tests cover error/failure paths?
+      - Are edge cases tested?
+
+  - name: performance
+    weight: 5
+    description: Are there obvious performance bottlenecks?
+    questions:
+      - Are there unnecessary loops or repeated file reads?
+      - Are LLM calls made unnecessarily?
+      - Is context truncation handled efficiently?
+
+  - name: developer_experience
+    weight: 4
+    description: Is the CLI/output clear and useful?
+    questions:
+      - Are error messages helpful and actionable?
+      - Is the CLI interface intuitive?
+      - Is logging at appropriate levels?
+
+  - name: feature_completeness
+    weight: 3
+    description: What capabilities are missing that would be valuable?
+    questions:
+      - Can the agent handle multi-file patches?
+      - Can it generate tests for new code?
+      - Can it summarize old journal entries?
+
+# Output format expected from LLM when using this skill
+output_format:
+  type: json
+  schema:
+    priority: "critical|high|medium|low"
+    category: "bug|security|architecture|test|performance|ux|feature"
+    title: "Short title (max 80 chars)"
+    rationale: "Why this is the most valuable improvement right now"
+    approach: "Precise description of the code change"
+    files_to_modify: ["list", "of", "relative", "file", "paths"]
+    test_strategy: "How to verify the improvement works"
+
+# Examples of good vs bad improvements to guide the LLM
+examples:
+  good:
+    - title: "Add retry logic to call_llm() for transient API failures"
+      rationale: "Network errors will silently kill evolution cycles"
+      category: bug
+      priority: high
+
+    - title: "Add test for apply_unified_diff() with malformed diff input"
+      rationale: "This function is critical and currently untested for edge cases"
+      category: test
+      priority: high
+
+    - title: "Validate JSON schema of LLM assessment response before use"
+      rationale: "Malformed LLM responses cause cryptic errors downstream"
+      category: bug
+      priority: medium
+
+  bad:
+    - title: "Complete rewrite of the entire agent"
+      reason: "Too large, too risky, low chance of passing tests in one cycle"
+
+    - title: "Add support for 5 new LLM providers simultaneously"
+      reason: "Too broad — should be done one provider at a time"
+
+    - title: "Refactor variable names throughout codebase"
+      reason: "Low value, high risk of breaking things"

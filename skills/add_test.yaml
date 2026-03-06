@@ -1,0 +1,42 @@
+name: add_test
+version: "1.0.0"
+description: >
+  Identifies untested code paths and generates pytest tests to cover them.
+  Focuses on critical functions, edge cases, and error paths first.
+priority: high
+category: test
+
+triggers:
+  - when_coverage_below_80
+  - after_feature_addition
+
+assessment_dimensions:
+  - name: untested_functions
+    description: Functions with no test coverage
+
+  - name: edge_cases
+    description: Boundary conditions not tested (empty input, None, large input)
+
+  - name: error_paths
+    description: Exception handling and failure modes not tested
+
+  - name: integration
+    description: Interactions between modules not tested
+
+output_format:
+  type: json
+  schema:
+    priority: "high|medium"
+    category: "test"
+    title: "Add tests for <specific function/module>"
+    rationale: "Why this coverage gap is risky"
+    approach: "What tests to write and what they verify"
+    files_to_modify: ["test_entwickler.py"]
+    test_strategy: "Run pytest and verify new tests pass"
+
+guidelines:
+  - Use pytest fixtures for common setup
+  - Mock external calls (LLM, GitHub API, git commands)
+  - Test both success and failure paths
+  - Keep individual tests focused on one behavior
+  - Use descriptive test names: test_function_when_condition_returns_expected

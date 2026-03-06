@@ -1,0 +1,95 @@
+name: Evolve
+
+on:
+  # Run every 4 hours
+  schedule:
+    - cron: "0 */4 * * *"
+  # Allow manual trigger for testing
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (assess only, no changes)"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  evolve:
+    name: Evolution Cycle
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Configure git identity
+        run: |
+          git config user.email "entwickler-agent@users.noreply.github.com"
+          git config user.name "Entwickler Agent"
+
+      - name: Run pre-evolution test suite
+        run: |
+          python -m pytest test_entwickler.py -v --tb=short
+        continue-on-error: false
+
+      - name: Run evolution cycle
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            python entwickler.py --dry-run
+          else
+            python entwickler.py
+          fi
+
+      - name: Post-evolution status
+        if: always()
+        run: |
+          echo "=== Agent Status ==="
+          python entwickler.py --status || true
+          echo ""
+          echo "=== Recent Journal ==="
+          if [ -f JOURNAL.md ]; then
+            head -100 JOURNAL.md
+          else
+            echo "No journal yet"
+          fi
+
+      - name: Upload journal as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: journal-${{ github.run_number }}
+          path: JOURNAL.md
+          retention-days: 90
+          if-no-files-found: ignore
