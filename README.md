@@ -51,8 +51,8 @@ Every few hours, Entwickler wakes up via GitHub Actions, reads its own source co
                        +------+------+
                               |
                        +------v------+
-                       |  Apply on   |  <- feature branch
-                       |  Branch     |     evolve/attempt-XYZ
+                       |  Apply on   |  <- directly on main
+                       |  main       |     (in-place edit)
                        +------+------+
                               |
                        +------v------+
@@ -63,16 +63,16 @@ Every few hours, Entwickler wakes up via GitHub Actions, reads its own source co
               +---------------+--------------+
               |                              |
        +------v------+              +--------v----+
-       |  Merge to   |              |  Revert &   |
-       |  main +     |              |  Log to     |
-       |  Commit     |              |  JOURNAL.md |
+       |  Commit &   |              |  Revert     |
+       |  Push to    |              |  in-place + |
+       |  main       |              |  JOURNAL.md |
        +-------------+              +-------------+
 ```
 
 ### Core Rules
 - No human edits the code after bootstrap — **only the agent commits**
 - Every run picks **one** focused, incremental improvement
-- All changes are tested before merging (pytest + ruff + black + mypy)
+- All changes are tested before committing (pytest + ruff)
 - Full history is preserved in `JOURNAL.md`
 - Skills system (`skills/*.yaml`) defines the improvement strategies
 

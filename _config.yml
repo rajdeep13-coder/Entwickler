@@ -1,0 +1,35 @@
+title: Entwickler
+description: >-
+  A self-evolving coding agent that writes, tests,
+  and improves its own code — autonomously.
+url: "https://rajdeep13-coder.github.io"
+baseurl: "/Entwickler"
+
+theme: minima
+
+minima:
+  skin: auto
+  social_links:
+    - { platform: github, user_url: "https://github.com/rajdeep13-coder/Entwickler" }
+
+# Navigation links shown in the site header
+header_pages:
+  - README.md
+  - JOURNAL.md
+  - IDENTITY.md
+
+# Exclude files that should not become web pages
+exclude:
+  - entwickler.py
+  - test_entwickler.py
+  - requirements.txt
+  - .env.example
+  - .gitignore
+  - skills/
+  - .github/
+  - "*.pyc"
+  - __pycache__/
+  - _site/
+  - Gemfile
+  - Gemfile.lock
+  - vendor/

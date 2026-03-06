@@ -34,3 +34,8 @@ htmlcov/
 # OS
 .DS_Store
 Thumbs.db
+
+# Jekyll / GitHub Pages build output
+_site/
+.jekyll-cache/
+.jekyll-metadata
