@@ -716,8 +716,8 @@ def get_current_branch() -> str:
 
 def git_configure_user() -> None:
     """Set git user identity for Actions environment."""
-    run_command(["git", "config", "user.email", "entwickler-agent@users.noreply.github.com"])
-    run_command(["git", "config", "user.name", "Entwickler Agent"])
+    run_command(["git", "config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com"])
+    run_command(["git", "config", "user.name", "github-actions[bot]"])
 
 
 # ---------------------------------------------------------------------------

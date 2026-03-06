@@ -221,6 +221,13 @@ waking cycle and decides whether to act on the suggestion.
 Small changes have a high probability of passing tests. The agent compounds many small correct
 changes rather than making one large risky change that is likely to fail.
 
+### How often does the agent evolve? Will it improve itself every hour?
+
+By default, the agent runs **every 4 hours** via a GitHub Actions cron schedule (`0 */4 * * *`).
+This is intentional — each evolution cycle makes one LLM call, so running every 4 hours balances
+improvement speed against API cost. If you want it to run every hour, you can edit
+`.github/workflows/evolve.yml` and change the cron line to `0 * * * *`.
+
 ---
 
 ## Philosophy
@@ -228,6 +235,17 @@ changes rather than making one large risky change that is likely to fail.
 Entwickler embodies **German engineering precision**: systematic, thorough, iterative. No shortcuts, no duct tape. If a change doesn't pass tests, it doesn't ship. If it's not logged, it didn't happen.
 
 It starts small and **earns** its complexity — one verified improvement at a time.
+
+---
+
+## Contributors
+
+| Contributor | Role |
+|-------------|------|
+| [![rajdeep13-coder](https://avatars.githubusercontent.com/rajdeep13-coder?size=40)](https://github.com/rajdeep13-coder) **[rajdeep13-coder](https://github.com/rajdeep13-coder)** | Human creator & maintainer |
+| [![github-actions[bot]](https://avatars.githubusercontent.com/in/15368?size=40)](https://github.com/apps/github-actions) **[github-actions[bot]](https://github.com/apps/github-actions)** | Entwickler Agent — autonomous self-evolution commits |
+
+> The bot commits directly to this repository on every successful evolution cycle. Both contributors are visible on the [GitHub Contributors page](https://github.com/rajdeep13-coder/Entwickler/graphs/contributors).
 
 ---
 
