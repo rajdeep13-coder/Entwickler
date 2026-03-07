@@ -726,3 +726,15 @@ def test_audit_source_for_secrets_ignores_hidden_dirs(tmp_path: Path, monkeypatc
 
     passed, output = entwickler.audit_source_for_secrets()
     assert passed is True
+
+
+def test_audit_source_for_secrets_ignores_test_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """audit_source_for_secrets ignores test_entwickler.py (contains test fixtures)."""
+    import entwickler  # type: ignore[import]
+
+    monkeypatch.setattr(entwickler, "REPO_ROOT", tmp_path)
+    test_file = tmp_path / "test_entwickler.py"
+    test_file.write_text('FAKE_KEY = "AIzaSyFakeKeyFakeKeyFakeKeyFakeKeyFake1"')
+
+    passed, output = entwickler.audit_source_for_secrets()
+    assert passed is True

@@ -675,7 +675,7 @@ def audit_source_for_secrets() -> tuple[bool, str]:
     provider key formats (Google/Gemini, OpenAI, Anthropic, AWS, etc.).
     """
     # Files to ignore (test fixtures, example configs).
-    _IGNORE_GLOBS = {".env.example"}
+    _IGNORE_GLOBS = {".env.example", "test_entwickler.py"}
 
     findings: list[str] = []
 
