@@ -4,7 +4,7 @@
 
 # Entwickler
 
-### 🦊 A self-evolving coding agent that writes, tests, and improves its own code — autonomously.
+### A self-evolving coding agent that writes, tests, and improves its own code — autonomously.
 
 [![Evolve](https://github.com/rajdeep13-coder/Entwickler/actions/workflows/evolve.yml/badge.svg)](https://github.com/rajdeep13-coder/Entwickler/actions/workflows/evolve.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
@@ -20,7 +20,7 @@
 
 ---
 
-## 🚀 What is Entwickler?
+## What is Entwickler?
 
 **Entwickler** (German: *developer*) is a production-grade, self-evolving AI coding agent. It starts as a ~300-line Python script and autonomously grows into a powerful CLI tool capable of rivalling Aider, Claude Code, and Cursor agent mode — **without any human ever editing its code after the initial bootstrap.**
 
@@ -28,7 +28,7 @@ Every few hours, Entwickler wakes up via GitHub Actions, reads its own source co
 
 ---
 
-## ⚙️ How It Works
+## How It Works
 
 ```
 +-------------------------------------------------------------+
@@ -70,7 +70,7 @@ Every few hours, Entwickler wakes up via GitHub Actions, reads its own source co
        +-------------+              +-------------+
 ```
 
-### 📌 Core Rules
+### Core Rules
 - No human edits the code after bootstrap — **only the agent commits**
 - Every run picks **one** focused, incremental improvement
 - All changes are tested before committing (pytest + ruff)
@@ -79,7 +79,7 @@ Every few hours, Entwickler wakes up via GitHub Actions, reads its own source co
 
 ---
 
-## 🛠️ Setup
+## Setup
 
 ### 1. Fork & Clone
 ```bash
@@ -127,7 +127,7 @@ Or check the `JOURNAL.md` for a narrative history of every evolution attempt.
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 Entwickler/
@@ -146,7 +146,7 @@ Entwickler/
 
 ---
 
-## 🤖 Supported LLM Providers
+## Supported LLM Providers
 
 Entwickler uses [LiteLLM](https://github.com/BerriAI/litellm) for a unified multi-provider interface:
 
@@ -161,7 +161,7 @@ The agent auto-selects providers based on cost/availability and falls back grace
 
 ---
 
-## 🧩 Skills System
+## Skills System
 
 Skills are YAML-defined behaviors loaded at runtime from `skills/`. Each skill describes:
 - **name**: skill identifier
@@ -174,7 +174,7 @@ The agent accumulates skills over time as it discovers new improvement strategie
 
 ---
 
-## 📈 Watching It Grow
+## Watching It Grow
 
 ```bash
 # See all evolution commits
@@ -192,7 +192,7 @@ pytest test_entwickler.py -v
 
 ---
 
-## 💡 Philosophy
+## Philosophy
 
 Entwickler embodies **German engineering precision**: systematic, thorough, iterative. No shortcuts, no duct tape. If a change doesn't pass tests, it doesn't ship. If it's not logged, it didn't happen.
 
@@ -200,7 +200,7 @@ It starts small and **earns** its complexity — one verified improvement at a t
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 You don't contribute code directly. You contribute **ideas**:
 
@@ -212,7 +212,7 @@ The agent also opens its own `agent-self` issues when it identifies problems it 
 
 ---
 
-## 📄 License
+## License
 
 MIT — see [LICENSE](LICENSE)
 
@@ -220,6 +220,6 @@ MIT — see [LICENSE](LICENSE)
 
 <div align="center">
 
-*"Ordnung muss sein." — There must be order.* 🦊
+*"Ordnung muss sein." — There must be order.*
 
 </div>
