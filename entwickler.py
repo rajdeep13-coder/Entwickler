@@ -790,7 +790,7 @@ def evolution_cycle() -> bool | None:
         console.print(Panel(
             "[bold yellow]Evolution cycle skipped[/bold yellow]\n"
             "No LLM API key found. Configure at least one provider API key\n"
-            f"as a repository secret: {key_names}",
+            f"as an environment variable (or repository secret in CI): {key_names}",
             expand=False,
         ))
         return None
