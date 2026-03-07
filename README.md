@@ -99,7 +99,6 @@ Add these secrets to your GitHub repository (`Settings -> Secrets -> Actions`):
 | Secret | Description |
 |--------|-------------|
 | `ANTHROPIC_API_KEY` | Claude API key (primary LLM) |
-| `GEMINI_API_KEY` | Google Gemini API key (fallback) |
 | `GROQ_API_KEY` | Groq/Llama API key (fast/cheap fallback) |
 | `GITHUB_TOKEN` | Auto-provided by GitHub Actions |
 
@@ -151,7 +150,6 @@ Entwickler/
 Entwickler uses [LiteLLM](https://github.com/BerriAI/litellm) for a unified multi-provider interface:
 
 - **Anthropic Claude** (claude-3-5-sonnet, claude-3-opus)
-- **Google Gemini** (gemini-1.5-pro, gemini-2.0-flash)
 - **Groq** (llama-3.1-70b, llama-3.1-405b) — fastest, cheapest
 - **DeepSeek** (deepseek-coder, deepseek-chat)
 - **Mistral** (mistral-large, codestral)

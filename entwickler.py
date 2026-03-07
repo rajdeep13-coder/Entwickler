@@ -80,6 +80,26 @@ IDENTITY_MAX_CHARS: int = 1500
 CHECK_OUTPUT_MAX_CHARS: int = 1000
 
 # ---------------------------------------------------------------------------
+# Secret Audit Configuration
+# ---------------------------------------------------------------------------
+
+# Regex patterns that strongly indicate a real API key.
+_SECRET_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
+    ("Google/Gemini API key", re.compile(r"AIzaSy[0-9A-Za-z_-]{33}")),
+    ("OpenAI API key", re.compile(r"sk-[A-Za-z0-9]{20,}")),
+    ("Anthropic API key", re.compile(r"sk-ant-[A-Za-z0-9_-]{20,}")),
+    ("AWS Access Key", re.compile(r"AKIA[0-9A-Z]{16}")),
+    ("GitHub PAT (classic)", re.compile(r"ghp_[A-Za-z0-9]{36}")),
+    ("GitHub PAT (fine-grained)", re.compile(r"github_pat_[A-Za-z0-9_]{20,}")),
+]
+
+# File extensions the secret audit will scan.
+_SCANNABLE_EXTENSIONS: set[str] = {
+    ".py", ".yml", ".yaml", ".json", ".toml",
+    ".cfg", ".ini", ".md", ".txt", ".sh", ".env",
+}
+
+# ---------------------------------------------------------------------------
 # LLM Provider Configuration
 # ---------------------------------------------------------------------------
 
@@ -91,13 +111,6 @@ LLM_PROVIDERS: list[dict[str, Any]] = [
         "env_key": "GROQ_API_KEY",
         "max_tokens": 8192,
         "cost_per_1k_input": 0.0006,
-    },
-    {
-        "name": "gemini-flash",
-        "model": "gemini/gemini-2.0-flash",
-        "env_key": "GEMINI_API_KEY",
-        "max_tokens": 8192,
-        "cost_per_1k_input": 0.00010,
     },
     {
         "name": "deepseek-coder",
@@ -112,13 +125,6 @@ LLM_PROVIDERS: list[dict[str, Any]] = [
         "env_key": "ANTHROPIC_API_KEY",
         "max_tokens": 8192,
         "cost_per_1k_input": 0.003,
-    },
-    {
-        "name": "gemini-pro",
-        "model": "gemini/gemini-1.5-pro",
-        "env_key": "GEMINI_API_KEY",
-        "max_tokens": 8192,
-        "cost_per_1k_input": 0.00125,
     },
     {
         "name": "mistral",
@@ -647,8 +653,51 @@ def run_format_check() -> tuple[bool, str]:
     return passed, output
 
 
+def audit_source_for_secrets() -> tuple[bool, str]:
+    """Scan tracked source files for accidentally hardcoded API keys.
+
+    Returns (passed, output) where *passed* is False when a potential secret
+    is detected.  The check uses lightweight regex patterns that match common
+    provider key formats (Google/Gemini, OpenAI, Anthropic, AWS, etc.).
+    """
+    # Files to ignore (test fixtures, example configs).
+    _IGNORE_GLOBS = {".env.example", "test_entwickler.py"}
+
+    findings: list[str] = []
+
+    for src in sorted(REPO_ROOT.rglob("*")):
+        if not src.is_file():
+            continue
+        rel = src.relative_to(REPO_ROOT)
+        # Skip hidden dirs (e.g. .git), virtual-envs, and ignored files.
+        parts = rel.parts
+        if any(p.startswith(".") for p in parts) or "node_modules" in parts:
+            continue
+        if str(rel) in _IGNORE_GLOBS:
+            continue
+        # Only scan text-like files
+        if src.suffix not in _SCANNABLE_EXTENSIONS:
+            continue
+        try:
+            text = src.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        for label, pattern in _SECRET_PATTERNS:
+            for match in pattern.finditer(text):
+                findings.append(f"  {rel}: potential {label} detected near char {match.start()}")
+
+    if findings:
+        detail = "\n".join(findings)
+        msg = f"SECRET AUDIT FAILED — {len(findings)} potential secret(s) found:\n{detail}"
+        log.error(msg)
+        return False, msg
+
+    log.info("Secret audit PASSED — no hardcoded keys detected")
+    return True, "No hardcoded secrets detected"
+
+
 def run_all_checks() -> tuple[bool, dict[str, tuple[bool, str]]]:
-    """Run tests + lint. Returns (all_passed, results_dict)."""
+    """Run tests + lint + secret audit. Returns (all_passed, results_dict)."""
     results: dict[str, tuple[bool, str]] = {}
 
     tests_passed, tests_output = run_tests()
@@ -657,7 +706,10 @@ def run_all_checks() -> tuple[bool, dict[str, tuple[bool, str]]]:
     lint_passed, lint_output = run_lint()
     results["lint"] = (lint_passed, lint_output)
 
-    all_passed = tests_passed and lint_passed
+    secrets_passed, secrets_output = audit_source_for_secrets()
+    results["secrets"] = (secrets_passed, secrets_output)
+
+    all_passed = tests_passed and lint_passed and secrets_passed
     return all_passed, results
 
 

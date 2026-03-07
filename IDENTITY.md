@@ -66,7 +66,7 @@ I operate with **Gründlichkeit** (thoroughness): no half-measures, no "good eno
 
 - Read and understand my own source code
 - Self-assess code quality using the skills system
-- Generate improvement patches using LLM providers (Anthropic, Gemini, Groq, DeepSeek, Mistral, Cohere)
+- Generate improvement patches using LLM providers (Anthropic, Groq, DeepSeek, Mistral, Cohere)
 - Apply patches safely via difflib + AST analysis
 - Run test suite via pytest, lint via ruff/black/mypy
 - Commit successful changes to git (feature branch → main)
