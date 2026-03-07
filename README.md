@@ -1,6 +1,10 @@
+<div align="center">
+
+<img src="https://github.com/user-attachments/assets/dddc586a-34b6-4695-883e-2c0093f99b53" alt="Entwickler" width="320" />
+
 # Entwickler
 
-> A self-evolving coding agent that writes, tests, and improves its own code — autonomously.
+### A self-evolving coding agent that writes, tests, and improves its own code — autonomously.
 
 [![Evolve](https://github.com/rajdeep13-coder/Entwickler/actions/workflows/evolve.yml/badge.svg)](https://github.com/rajdeep13-coder/Entwickler/actions/workflows/evolve.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
@@ -10,12 +14,9 @@
 [![GitHub Issues](https://img.shields.io/github/issues/rajdeep13-coder/Entwickler)](https://github.com/rajdeep13-coder/Entwickler/issues)
 [![Last Commit](https://img.shields.io/github/last-commit/rajdeep13-coder/Entwickler)](https://github.com/rajdeep13-coder/Entwickler/commits/main)
 
----
+[**Fork this repo**](https://github.com/rajdeep13-coder/Entwickler/fork) · [**Open an issue**](https://github.com/rajdeep13-coder/Entwickler/issues/new) · [**View the journal**](JOURNAL.md) · [**Watch it evolve**](https://github.com/rajdeep13-coder/Entwickler/commits/main)
 
-**[Fork this repo](https://github.com/rajdeep13-coder/Entwickler/fork)** &nbsp;|&nbsp;
-**[Open an issue](https://github.com/rajdeep13-coder/Entwickler/issues/new)** &nbsp;|&nbsp;
-**[View the journal](JOURNAL.md)** &nbsp;|&nbsp;
-**[Watch it evolve](https://github.com/rajdeep13-coder/Entwickler/commits/main)**
+</div>
 
 ---
 
@@ -191,61 +192,11 @@ pytest test_entwickler.py -v
 
 ---
 
-## FAQ
-
-### Is it fully working?
-
-Yes — with at least one LLM API key configured, the agent will run a complete evolution cycle:
-it reads its own source, asks the LLM to identify one improvement, generates a patch, applies
-it on a feature branch, runs `pytest` and `ruff`, and either merges to `main` (on success) or
-reverts and writes the failure to `JOURNAL.md`. The bootstrap version is deliberately small and
-conservative; it grows from there.
-
-Set at least one of `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, or `GROQ_API_KEY` in your repo
-secrets, then trigger the workflow manually from the Actions tab to see the first run.
-
-### Can I deploy it to GitHub Pages?
-
-No — this is a Python CLI agent, not a web application. GitHub Pages serves static HTML/CSS/JS
-and cannot run a Python process. The agent runs entirely inside GitHub Actions workers. The
-`JOURNAL.md` and `README.md` serve as the "live dashboard" you can read on GitHub without
-any separate deployment.
-
-### How do I suggest an improvement?
-
-Open a GitHub Issue and add the `agent-input` label. The agent reads these issues on every
-waking cycle and decides whether to act on the suggestion.
-
-### Why does the agent pick small changes?
-
-Small changes have a high probability of passing tests. The agent compounds many small correct
-changes rather than making one large risky change that is likely to fail.
-
-### How often does the agent evolve? Will it improve itself every hour?
-
-By default, the agent runs **every 4 hours** via a GitHub Actions cron schedule (`0 */4 * * *`).
-This is intentional — each evolution cycle makes one LLM call, so running every 4 hours balances
-improvement speed against API cost. If you want it to run every hour, you can edit
-`.github/workflows/evolve.yml` and change the cron line to `0 * * * *`.
-
----
-
 ## Philosophy
 
 Entwickler embodies **German engineering precision**: systematic, thorough, iterative. No shortcuts, no duct tape. If a change doesn't pass tests, it doesn't ship. If it's not logged, it didn't happen.
 
 It starts small and **earns** its complexity — one verified improvement at a time.
-
----
-
-## Contributors
-
-| Contributor | Role |
-|-------------|------|
-| [![rajdeep13-coder](https://avatars.githubusercontent.com/rajdeep13-coder?size=40)](https://github.com/rajdeep13-coder) **[rajdeep13-coder](https://github.com/rajdeep13-coder)** | Human creator & maintainer |
-| [![github-actions[bot]](https://avatars.githubusercontent.com/in/15368?size=40)](https://github.com/apps/github-actions) **[github-actions[bot]](https://github.com/apps/github-actions)** | Entwickler Agent — autonomous self-evolution commits |
-
-> The bot commits directly to this repository on every successful evolution cycle. Both contributors are visible on the [GitHub Contributors page](https://github.com/rajdeep13-coder/Entwickler/graphs/contributors).
 
 ---
 
@@ -267,4 +218,8 @@ MIT — see [LICENSE](LICENSE)
 
 ---
 
+<div align="center">
+
 *"Ordnung muss sein." — There must be order.*
+
+</div>
