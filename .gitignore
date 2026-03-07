@@ -24,6 +24,8 @@ htmlcov/
 
 # Environment files
 .env
+.env.*
+!.env.example
 
 # IDE
 .vscode/

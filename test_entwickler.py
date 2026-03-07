@@ -655,3 +655,74 @@ def test_run_command_captures_stderr() -> None:
         ["python", "-c", "import sys; print('err', file=sys.stderr)"]
     )
     assert "err" in stderr
+
+
+# ---------------------------------------------------------------------------
+# audit_source_for_secrets — hardcoded key detection
+# ---------------------------------------------------------------------------
+
+
+def test_audit_source_for_secrets_passes_on_clean_repo(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """audit_source_for_secrets passes when no secrets are present."""
+    import entwickler  # type: ignore[import]
+
+    # Point REPO_ROOT at a clean temp directory
+    monkeypatch.setattr(entwickler, "REPO_ROOT", tmp_path)
+    clean_file = tmp_path / "clean.py"
+    clean_file.write_text('API_KEY = os.environ.get("GEMINI_API_KEY")\n')
+
+    passed, output = entwickler.audit_source_for_secrets()
+    assert passed is True
+    assert "No hardcoded secrets" in output
+
+
+def test_audit_source_for_secrets_detects_google_key(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """audit_source_for_secrets detects a Google/Gemini API key."""
+    import entwickler  # type: ignore[import]
+
+    # Point REPO_ROOT at a temporary directory with a fake leaked key
+    monkeypatch.setattr(entwickler, "REPO_ROOT", tmp_path)
+    leaked_file = tmp_path / "leaked.py"
+    leaked_file.write_text('API_KEY = "AIzaSyFakeKeyFakeKeyFakeKeyFakeKeyFake1"')
+
+    passed, output = entwickler.audit_source_for_secrets()
+    assert passed is False
+    assert "Google/Gemini API key" in output
+
+
+def test_audit_source_for_secrets_detects_openai_key(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """audit_source_for_secrets detects an OpenAI API key."""
+    import entwickler  # type: ignore[import]
+
+    monkeypatch.setattr(entwickler, "REPO_ROOT", tmp_path)
+    leaked_file = tmp_path / "config.yaml"
+    leaked_file.write_text("openai_key: sk-abc123def456ghi789jkl012mno345pq")
+
+    passed, output = entwickler.audit_source_for_secrets()
+    assert passed is False
+    assert "OpenAI API key" in output
+
+
+def test_audit_source_for_secrets_ignores_env_example(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """audit_source_for_secrets ignores .env.example."""
+    import entwickler  # type: ignore[import]
+
+    monkeypatch.setattr(entwickler, "REPO_ROOT", tmp_path)
+    example_file = tmp_path / ".env.example"
+    example_file.write_text('GEMINI_API_KEY=AIzaSyFakeKeyFakeKeyFakeKeyFakeKeyFake1')
+
+    passed, output = entwickler.audit_source_for_secrets()
+    assert passed is True
+
+
+def test_audit_source_for_secrets_ignores_hidden_dirs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """audit_source_for_secrets ignores files inside hidden directories like .git."""
+    import entwickler  # type: ignore[import]
+
+    monkeypatch.setattr(entwickler, "REPO_ROOT", tmp_path)
+    git_dir = tmp_path / ".git" / "config"
+    git_dir.parent.mkdir(parents=True)
+    git_dir.write_text('token = AIzaSyFakeKeyFakeKeyFakeKeyFakeKeyFake1')
+
+    passed, output = entwickler.audit_source_for_secrets()
+    assert passed is True
