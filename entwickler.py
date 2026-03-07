@@ -120,6 +120,27 @@ LLM_PROVIDERS: list[dict[str, Any]] = [
         "max_tokens": 8192,
         "cost_per_1k_input": 0.00125,
     },
+    {
+        "name": "mistral",
+        "model": "mistral/mistral-small-latest",
+        "env_key": "MISTRAL_API_KEY",
+        "max_tokens": 8192,
+        "cost_per_1k_input": 0.001,
+    },
+    {
+        "name": "cohere",
+        "model": "cohere/command-r",
+        "env_key": "COHERE_API_KEY",
+        "max_tokens": 4096,
+        "cost_per_1k_input": 0.0005,
+    },
+    {
+        "name": "github-models",
+        "model": "github/gpt-4o-mini",
+        "env_key": "GITHUB_TOKEN",
+        "max_tokens": 4096,
+        "cost_per_1k_input": 0.0,
+    },
 ]
 
 
@@ -745,7 +766,7 @@ def journal_entry(
 # ---------------------------------------------------------------------------
 
 
-def evolution_cycle() -> bool:
+def evolution_cycle() -> bool | None:
     """
     Execute one full evolution cycle:
     1. Build context (read self + environment)
@@ -756,7 +777,24 @@ def evolution_cycle() -> bool:
     6. Commit and push to main (on success) or revert in-place + log (on failure)
 
     Returns True if evolution succeeded, False otherwise.
+    Returns None if skipped due to missing configuration.
     """
+    # Early check: verify at least one LLM provider is available
+    provider = get_available_provider()
+    if provider is None:
+        key_names = ", ".join(p["env_key"] for p in LLM_PROVIDERS)
+        log.warning(
+            f"No LLM API key configured — skipping evolution cycle. "
+            f"Set one of: {key_names}"
+        )
+        console.print(Panel(
+            "[bold yellow]Evolution cycle skipped[/bold yellow]\n"
+            "No LLM API key found. Configure at least one provider API key\n"
+            f"as a repository secret: {key_names}",
+            expand=False,
+        ))
+        return None
+
     attempt_id = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
     assessment: dict[str, Any] = {}
     check_results: dict[str, tuple[bool, str]] = {}
@@ -933,8 +971,12 @@ def main() -> None:
         ))
         return
 
-    success = evolution_cycle()
-    sys.exit(0 if success else 1)
+    result = evolution_cycle()
+    # None means skipped (missing config) — exit 0 since it's not a runtime failure
+    # True means success, False means actual evolution failure
+    if result is None:
+        sys.exit(0)
+    sys.exit(0 if result else 1)
 
 
 if __name__ == "__main__":

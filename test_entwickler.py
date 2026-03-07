@@ -311,6 +311,67 @@ def test_get_available_provider_returns_provider_when_key_set(monkeypatch: pytes
     assert result["env_key"] == "GROQ_API_KEY"
 
 
+def test_get_available_provider_finds_mistral(monkeypatch: pytest.MonkeyPatch) -> None:
+    """get_available_provider finds Mistral when only its key is set."""
+    from entwickler import LLM_PROVIDERS  # type: ignore[import]
+
+    for provider in LLM_PROVIDERS:
+        monkeypatch.delenv(provider["env_key"], raising=False)
+    monkeypatch.setenv("MISTRAL_API_KEY", "test-mistral-key")
+
+    from entwickler import get_available_provider  # type: ignore[import]
+
+    result = get_available_provider()
+    assert result is not None
+    assert result["name"] == "mistral"
+
+
+def test_get_available_provider_finds_cohere(monkeypatch: pytest.MonkeyPatch) -> None:
+    """get_available_provider finds Cohere when only its key is set."""
+    from entwickler import LLM_PROVIDERS  # type: ignore[import]
+
+    for provider in LLM_PROVIDERS:
+        monkeypatch.delenv(provider["env_key"], raising=False)
+    monkeypatch.setenv("COHERE_API_KEY", "test-cohere-key")
+
+    from entwickler import get_available_provider  # type: ignore[import]
+
+    result = get_available_provider()
+    assert result is not None
+    assert result["name"] == "cohere"
+
+
+def test_get_available_provider_finds_github_models(monkeypatch: pytest.MonkeyPatch) -> None:
+    """get_available_provider finds GitHub Models when GITHUB_TOKEN is set."""
+    from entwickler import LLM_PROVIDERS  # type: ignore[import]
+
+    for provider in LLM_PROVIDERS:
+        monkeypatch.delenv(provider["env_key"], raising=False)
+    monkeypatch.setenv("GITHUB_TOKEN", "ghp_test-token")
+
+    from entwickler import get_available_provider  # type: ignore[import]
+
+    result = get_available_provider()
+    assert result is not None
+    assert result["name"] == "github-models"
+
+
+# ---------------------------------------------------------------------------
+# evolution_cycle — graceful skip on missing API keys
+# ---------------------------------------------------------------------------
+
+
+def test_evolution_cycle_returns_none_when_no_api_key(monkeypatch: pytest.MonkeyPatch) -> None:
+    """evolution_cycle returns None (skip) when no LLM API keys are configured."""
+    from entwickler import LLM_PROVIDERS, evolution_cycle  # type: ignore[import]
+
+    for provider in LLM_PROVIDERS:
+        monkeypatch.delenv(provider["env_key"], raising=False)
+
+    result = evolution_cycle()
+    assert result is None
+
+
 # ---------------------------------------------------------------------------
 # select_skill
 # ---------------------------------------------------------------------------
