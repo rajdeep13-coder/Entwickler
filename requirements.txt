@@ -1,4 +1,4 @@
-# Core LLM interface (multi-provider, no openai package directly)
+# Core LLM interface (multi-provider)
 litellm>=1.40.0
 
 # Git operations
@@ -24,6 +24,9 @@ requests>=2.31.0
 
 # Rich terminal output
 rich>=13.5.0
+
+# Cryptography (for secure secret storage)
+cryptography>=41.0.0
 
 # Type stubs
 types-requests>=2.31.0
