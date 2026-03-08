@@ -113,6 +113,13 @@ LLM_PROVIDERS: list[dict[str, Any]] = [
         "cost_per_1k_input": 0.0006,
     },
     {
+        "name": "gemini-flash",
+        "model": "gemini/gemini-2.0-flash",
+        "env_key": "GEMINI_API_KEY",
+        "max_tokens": 8192,
+        "cost_per_1k_input": 0.0001,
+    },
+    {
         "name": "deepseek-coder",
         "model": "deepseek/deepseek-coder",
         "env_key": "DEEPSEEK_API_KEY",
