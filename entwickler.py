@@ -107,14 +107,21 @@ _SCANNABLE_EXTENSIONS: set[str] = {
 LLM_PROVIDERS: list[dict[str, Any]] = [
     {
         "name": "groq-llama3",
-        "model": "groq/llama-3.1-70b-versatile",
+        "model": "groq/llama-3.3-70b-versatile",
         "env_key": "GROQ_API_KEY",
         "max_tokens": 8192,
         "cost_per_1k_input": 0.0006,
     },
     {
+        "name": "groq-llama3-fast",
+        "model": "groq/llama-3.1-8b-instant",
+        "env_key": "GROQ_API_KEY",
+        "max_tokens": 8192,
+        "cost_per_1k_input": 0.0001,
+    },
+    {
         "name": "gemini-flash",
-        "model": "gemini/gemini-2.0-flash",
+        "model": "gemini/gemini-1.5-flash",
         "env_key": "GEMINI_API_KEY",
         "max_tokens": 8192,
         "cost_per_1k_input": 0.0001,
