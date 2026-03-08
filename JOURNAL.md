@@ -2,6 +2,37 @@
 
 
 ---
+## Evolution Attempt [FAILURE] — 20260308-033638
+**Timestamp**: 2026-03-08 03:36:41 UTC  
+**Status**: FAILURE  
+**Priority**: UNKNOWN  
+**Category**: error  
+**Title**: Unknown  
+
+### Rationale
+?
+
+### Approach
+?
+
+### Error
+```
+Traceback (most recent call last):
+  File "/home/runner/work/Entwickler/Entwickler/entwickler.py", line 893, in evolution_cycle
+    assessment = self_assess(context)
+                 ^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Entwickler/Entwickler/entwickler.py", line 407, in self_assess
+    response = call_llm(prompt, system=SELF_ASSESS_SYSTEM)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Entwickler/Entwickler/entwickler.py", line 207, in call_llm
+    raise RuntimeError("All LLM providers failed:\n" + "\n".join(last_errors))
+RuntimeError: All LLM providers failed:
+groq-llama3: litellm.BadRequestError: GroqException - {"error":{"message":"The model `llama-3.1-70b-versatile` has been decommissioned and is no longer supported. Please refer to https://console.groq.com/docs/deprecations for a recommendation on which model to use instead.","type":"invalid_request_error","code":"model_decommissioned"}}
+
+
+```
+
+---
 ## Evolution Attempt [FAILURE] — 20260308-014450
 **Timestamp**: 2026-03-08 01:45:00 UTC  
 **Status**: FAILURE  
