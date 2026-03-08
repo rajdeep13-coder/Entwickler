@@ -3,7 +3,7 @@ version: "1.0.0"
 description: >
   Identifies untested code paths and generates pytest tests to cover them.
   Focuses on critical functions, edge cases, and error paths first.
-priority: high
+priority: medium
 category: test
 
 triggers:
