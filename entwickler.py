@@ -77,7 +77,7 @@ JOURNAL_RECENT_CHARS: int = 2000
 IDENTITY_MAX_CHARS: int = 1500
 
 # Journal: max chars of check output to log per check
-CHECK_OUTPUT_MAX_CHARS: int = 1000
+CHECK_OUTPUT_MAX_CHARS: int = 4000
 
 # ---------------------------------------------------------------------------
 # Secret Audit Configuration
@@ -143,7 +143,7 @@ LLM_PROVIDERS: list[dict[str, Any]] = [
     {
         "name": "github-models",
         "model": "github/gpt-4o-mini",
-        "env_key": "GITHUB_TOKEN",
+        "env_key": "GH_MODELS_TOKEN",
         "max_tokens": 4096,
         "cost_per_1k_input": 0.0,
     },
@@ -169,32 +169,42 @@ def call_llm(prompt: str, system: str = "", max_tokens: int = 4096) -> str:
     except ImportError as exc:
         raise RuntimeError("litellm not installed — run: pip install litellm") from exc
 
-    provider = get_available_provider()
-    if provider is None:
+    available = [p for p in LLM_PROVIDERS if os.environ.get(p["env_key"])]
+    if not available:
         raise RuntimeError(
             "No LLM API key found. Set one of: "
             + ", ".join(p["env_key"] for p in LLM_PROVIDERS)
         )
 
-    messages: list[dict[str, str]] = []
-    if system:
-        messages.append({"role": "system", "content": system})
-    messages.append({"role": "user", "content": prompt})
+    last_errors: list[str] = []
 
-    log.info(f"Calling LLM: {provider['name']} ({provider['model']})")
+    for provider in available:
+        messages: list[dict[str, str]] = []
+        if system:
+            messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": prompt})
 
-    # Estimate cost using token-to-word ratio approximation
-    token_estimate = len(prompt.split()) * TOKEN_TO_WORD_RATIO
-    cost_estimate = (token_estimate / 1000) * provider["cost_per_1k_input"]
-    log.info(f"Estimated cost: ~${cost_estimate:.4f} ({token_estimate:.0f} tokens)")
+        log.info(f"Calling LLM: {provider['name']} ({provider['model']})")
 
-    response = litellm.completion(
-        model=provider["model"],
-        messages=messages,
-        max_tokens=min(max_tokens, provider["max_tokens"]),
-        api_key=os.environ.get(provider["env_key"]),
-    )
-    return response.choices[0].message.content or ""
+        # Estimate cost using token-to-word ratio approximation
+        token_estimate = len(prompt.split()) * TOKEN_TO_WORD_RATIO
+        cost_estimate = (token_estimate / 1000) * provider["cost_per_1k_input"]
+        log.info(f"Estimated cost: ~${cost_estimate:.4f} ({token_estimate:.0f} tokens)")
+
+        try:
+            response = litellm.completion(
+                model=provider["model"],
+                messages=messages,
+                max_tokens=min(max_tokens, provider["max_tokens"]),
+                api_key=os.environ.get(provider["env_key"]),
+            )
+            return response.choices[0].message.content or ""
+        except Exception as e:
+            log.warning(f"Provider {provider['name']} failed: {e} — trying next provider")
+            last_errors.append(f"{provider['name']}: {e}")
+            continue
+
+    raise RuntimeError("All LLM providers failed:\n" + "\n".join(last_errors))
 
 
 # ---------------------------------------------------------------------------
@@ -316,6 +326,7 @@ SELF_ASSESS_SYSTEM = textwrap.dedent("""\
     Your goal is to identify the SINGLE most impactful improvement you can make to your own codebase right now.
     Be precise, focused, and pragmatic. Small correct changes beat large risky ones.
     Always think about: correctness > security > architecture > tests > performance > UX.
+    If the most recent journal entry records a FAILURE for the same category as your top candidate improvement, deprioritize that category and pick the next most impactful improvement instead.
 """)
 
 SELF_ASSESS_PROMPT = textwrap.dedent("""\
@@ -333,6 +344,9 @@ SELF_ASSESS_PROMPT = textwrap.dedent("""\
 
     ## Active Skills
     {skills_summary}
+
+    ## Suggested Focus (from Skills System)
+    {selected_skill_hint}
 
     ---
 
@@ -375,12 +389,19 @@ def self_assess(context: dict[str, Any]) -> dict[str, Any]:
         context["journal"][-JOURNAL_RECENT_CHARS:] if context["journal"] else "No journal entries yet."
     )
 
+    skill = context.get("selected_skill")
+    if skill:
+        selected_skill_hint = f"Apply skill '{skill.get('name', '?')}': {skill.get('description', '?')}"
+    else:
+        selected_skill_hint = "No specific skill selected — use your own judgment."
+
     prompt = SELF_ASSESS_PROMPT.format(
         source_summary=source_summary,
         identity=context["identity"][:IDENTITY_MAX_CHARS],
         journal_recent=journal_recent,
         issues_summary=issues_summary,
         skills_summary=skills_summary,
+        selected_skill_hint=selected_skill_hint,
     )
 
     response = call_llm(prompt, system=SELF_ASSESS_SYSTEM)
@@ -451,7 +472,10 @@ def generate_patch(assessment: dict[str, Any], sources: dict[str, str]) -> dict[
             fpath = REPO_ROOT / fname
             if fpath.exists():
                 content = fpath.read_text(encoding="utf-8")
-        file_contents += f"\n### {fname}\n```python\n{content}\n```\n"
+        was_truncated = len(content) > MAX_SOURCE_PREVIEW_LENGTH
+        preview = content[:MAX_SOURCE_PREVIEW_LENGTH]
+        truncation_note = "\n... [truncated to 2000 chars for context window]" if was_truncated else ""
+        file_contents += f"\n### {fname}\n```python\n{preview}{truncation_note}\n```\n"
 
     prompt = PATCH_PROMPT.format(
         title=assessment.get("title", ""),
@@ -858,6 +882,10 @@ def evolution_cycle() -> bool | None:
         # Step 1: Build context
         log.info("Step 1/5: Building context...")
         context = build_context()
+        selected_skill = select_skill(context["skills"], context)
+        if selected_skill:
+            context["selected_skill"] = selected_skill
+            log.info(f"Selected skill: {selected_skill.get('name', '?')} ({selected_skill.get('priority', '?')} priority)")
         log.info(f"Context: {len(context['sources'])} source files, {len(context['skills'])} skills, {len(context['issues'])} issues")
 
         # Step 2: Self-assess
