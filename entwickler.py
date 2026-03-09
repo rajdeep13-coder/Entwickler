@@ -284,9 +284,9 @@ def select_skill(skills: list[dict[str, Any]], context: dict[str, Any]) -> dict[
     fresh = [s for s in skills if s.get("category", "") not in recent_cats]
     pool = fresh if fresh else skills
 
-    # Weighted random selection: lower-priority skills still get a chance.
-    # Weights: critical→1, high→2, medium→3, low→4  (inverted so lower
-    # priority = *higher* weight, giving them a fair shot).
+    # Weighted random selection: all skills get a chance, not just the highest.
+    # Higher numeric weight = higher chance of being picked by random.choices().
+    # Low-priority skills get *higher* weights so they aren't starved out.
     priority_weight = {"critical": 1, "high": 2, "medium": 3, "low": 4}
     weights = [priority_weight.get(s.get("priority", "low"), 3) for s in pool]
     return random.choices(pool, weights=weights, k=1)[0]
