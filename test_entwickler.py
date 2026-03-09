@@ -626,6 +626,59 @@ def test_journal_entry_prepends_to_existing(tmp_path: Path) -> None:
     assert new_pos < old_pos
 
 
+def test_journal_compaction(tmp_path: Path) -> None:
+    """build_context compacts journal when it exceeds JOURNAL_MAX_LENGTH."""
+    from entwickler import build_context, JOURNAL_MAX_LENGTH, JOURNAL_KEEP_LENGTH  # type: ignore[import]
+
+    # Create a journal file larger than JOURNAL_MAX_LENGTH using repeated entries
+    journal_file = tmp_path / "JOURNAL.md"
+    entry = "## Evolution Attempt [SUCCESS] — 20240101-120000\n**Category**: test\nSome content.\n\n"
+    repeats = (JOURNAL_MAX_LENGTH + 1000) // len(entry) + 1
+    long_journal = entry * repeats
+    journal_file.write_text(long_journal, encoding="utf-8")
+
+    with patch("entwickler.JOURNAL_FILE", journal_file), \
+         patch("entwickler.IDENTITY_FILE", tmp_path / "IDENTITY.md"), \
+         patch("entwickler.SKILLS_DIR", tmp_path / "skills"), \
+         patch("entwickler.read_source_files", return_value={}), \
+         patch("entwickler.fetch_github_issues", return_value=[]):
+        # Create the identity file and skills dir so read_markdown / load_skills work
+        (tmp_path / "IDENTITY.md").write_text("# Identity\n", encoding="utf-8")
+        (tmp_path / "skills").mkdir(exist_ok=True)
+
+        ctx = build_context()
+
+    journal_in_ctx = ctx["journal"]
+    # Journal should have been compacted
+    assert journal_in_ctx.startswith("...[earlier entries compacted]...")
+    # The kept portion should be JOURNAL_KEEP_LENGTH chars from the original
+    assert journal_in_ctx.endswith(long_journal[-JOURNAL_KEEP_LENGTH:])
+    # Total length should be less than the original
+    assert len(journal_in_ctx) < len(long_journal)
+
+
+def test_journal_no_compaction_when_short(tmp_path: Path) -> None:
+    """build_context does not compact journal when it is within JOURNAL_MAX_LENGTH."""
+    from entwickler import build_context, JOURNAL_MAX_LENGTH  # type: ignore[import]
+
+    journal_file = tmp_path / "JOURNAL.md"
+    short_journal = "## Evolution Attempt [SUCCESS]\nShort journal content.\n"
+    journal_file.write_text(short_journal, encoding="utf-8")
+
+    with patch("entwickler.JOURNAL_FILE", journal_file), \
+         patch("entwickler.IDENTITY_FILE", tmp_path / "IDENTITY.md"), \
+         patch("entwickler.SKILLS_DIR", tmp_path / "skills"), \
+         patch("entwickler.read_source_files", return_value={}), \
+         patch("entwickler.fetch_github_issues", return_value=[]):
+        (tmp_path / "IDENTITY.md").write_text("# Identity\n", encoding="utf-8")
+        (tmp_path / "skills").mkdir(exist_ok=True)
+
+        ctx = build_context()
+
+    # Journal should NOT be compacted
+    assert ctx["journal"] == short_journal
+
+
 # ---------------------------------------------------------------------------
 # Skills YAML files exist and are valid
 # ---------------------------------------------------------------------------
