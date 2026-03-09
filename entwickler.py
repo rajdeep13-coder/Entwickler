@@ -257,15 +257,39 @@ def load_skills() -> list[dict[str, Any]]:
     return skills
 
 
+def _recent_journal_categories(journal: str, max_entries: int = 5) -> list[str]:
+    """Extract category values from recent journal entries (newest first)."""
+    return re.findall(r"\*\*Category\*\*:\s*(\w+)", journal)[:max_entries]
+
+
 def select_skill(skills: list[dict[str, Any]], context: dict[str, Any]) -> dict[str, Any] | None:
-    """Select the highest-priority applicable skill."""
-    priority_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
-    sorted_skills = sorted(
-        skills,
-        key=lambda s: priority_order.get(s.get("priority", "low"), 99),
-    )
-    # For now, return first applicable skill; agent will improve this selection logic
-    return sorted_skills[0] if sorted_skills else None
+    """Select a skill, rotating to avoid repeating recent categories.
+
+    Logic:
+    1. Look at the categories of the last few journal entries.
+    2. Prefer skills whose category has NOT been attempted recently.
+    3. Among those, pick randomly (weighted by inverse priority rank) so
+       that different skills get a chance across cycles.
+    4. Fall back to all skills if every category was recently attempted.
+    """
+    import random
+
+    if not skills:
+        return None
+
+    journal = context.get("journal", "")
+    recent_cats = _recent_journal_categories(journal)
+
+    # Separate skills into "fresh" (category not recently tried) and "rest"
+    fresh = [s for s in skills if s.get("category", "") not in recent_cats]
+    pool = fresh if fresh else skills
+
+    # Weighted random selection: lower-priority skills still get a chance.
+    # Weights: critical→1, high→2, medium→3, low→4  (inverted so lower
+    # priority = *higher* weight, giving them a fair shot).
+    priority_weight = {"critical": 1, "high": 2, "medium": 3, "low": 4}
+    weights = [priority_weight.get(s.get("priority", "low"), 3) for s in pool]
+    return random.choices(pool, weights=weights, k=1)[0]
 
 
 # ---------------------------------------------------------------------------
@@ -350,11 +374,20 @@ SELF_ASSESS_SYSTEM = textwrap.dedent("""\
     You are Entwickler, a self-evolving coding agent performing a critical self-assessment.
     Your goal is to identify the SINGLE most impactful improvement you can make to your own codebase right now.
     Be precise, focused, and pragmatic. Small correct changes beat large risky ones.
-    Always think about: correctness > security > architecture > tests > performance > UX.
+
+    VARIETY IS KEY — do NOT keep picking the same category every cycle:
+    - The "Suggested Focus" section tells you which skill/category to focus on THIS cycle.
+      Follow it! If it says "add_test", propose a test. If it says "refactor", propose a
+      refactoring. If it says "optimize", propose a performance improvement.
+    - The "Recently attempted categories" section lists categories already tried.
+      AVOID proposing the same category again — pick something different.
+    - Cycle through ALL categories over time: test, bug, architecture, performance, ux, feature.
+    - Security is already RESOLVED — do NOT propose security improvements.
+
     Rules for reading the journal:
     - If the most recent journal entry records a FAILURE for the same category as your top candidate improvement, deprioritize that category and pick the next most impactful improvement instead.
-    - If the journal contains a SUCCESS entry for a topic (e.g. 'API key configured', 'provider available'), treat that topic as RESOLVED — do NOT propose it again.
-    - Never propose adding or changing environment variables / API keys when a SUCCESS entry already confirms the LLM is working (the very fact you are running proves a key is present).
+    - If the journal contains a SUCCESS entry for a topic, treat that topic as RESOLVED — do NOT propose it again.
+    - Never propose adding or changing environment variables / API keys.
     - Focus only on improvements to the Python source code or test suite in the repository.
     CRITICAL RULES — violations will cause automatic failure:
     - NEVER propose changes to LLM API keys, environment variables, secrets, or provider configuration. The fact that you are responding proves the LLM is working. Any such proposal will be rejected.
@@ -383,9 +416,14 @@ SELF_ASSESS_PROMPT = textwrap.dedent("""\
     ## Suggested Focus (from Skills System)
     {selected_skill_hint}
 
+    ## Recently attempted categories (AVOID these — pick something DIFFERENT)
+    {recent_categories}
+
     ---
 
     Perform a thorough self-assessment. Identify the SINGLE most valuable improvement to make.
+    IMPORTANT: Do NOT pick a category listed in "Recently attempted categories" above.
+    Instead, choose from the categories that have NOT been tried recently.
     Respond in this exact JSON format:
     {{
       "priority": "critical|high|medium|low",
@@ -424,6 +462,13 @@ def self_assess(context: dict[str, Any]) -> dict[str, Any]:
         context["journal"][-JOURNAL_RECENT_CHARS:] if context["journal"] else "No journal entries yet."
     )
 
+    # Tell the LLM which categories were recently attempted so it avoids them.
+    recent_cats = _recent_journal_categories(context.get("journal", ""))
+    if recent_cats:
+        recent_categories = ", ".join(dict.fromkeys(recent_cats))  # unique, ordered
+    else:
+        recent_categories = "None yet — feel free to pick any category."
+
     skill = context.get("selected_skill")
     if skill:
         selected_skill_hint = f"Apply skill '{skill.get('name', '?')}': {skill.get('description', '?')}"
@@ -437,6 +482,7 @@ def self_assess(context: dict[str, Any]) -> dict[str, Any]:
         issues_summary=issues_summary,
         skills_summary=skills_summary,
         selected_skill_hint=selected_skill_hint,
+        recent_categories=recent_categories,
     )
 
     response = call_llm(prompt, system=SELF_ASSESS_SYSTEM)
