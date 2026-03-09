@@ -342,12 +342,12 @@ def test_get_available_provider_finds_cohere(monkeypatch: pytest.MonkeyPatch) ->
 
 
 def test_get_available_provider_finds_github_models(monkeypatch: pytest.MonkeyPatch) -> None:
-    """get_available_provider finds GitHub Models when GH_MODELS_TOKEN is set."""
+    """get_available_provider finds GitHub Models when GITHUB_TOKEN is set."""
     from entwickler import LLM_PROVIDERS  # type: ignore[import]
 
     for provider in LLM_PROVIDERS:
         monkeypatch.delenv(provider["env_key"], raising=False)
-    monkeypatch.setenv("GH_MODELS_TOKEN", "ghp_test-token")
+    monkeypatch.setenv("GITHUB_TOKEN", "ghp_test-token")
 
     from entwickler import get_available_provider  # type: ignore[import]
 

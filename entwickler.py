@@ -158,7 +158,7 @@ LLM_PROVIDERS: list[dict[str, Any]] = [
     {
         "name": "github-models",
         "model": "github/gpt-4o-mini",
-        "env_key": "GH_MODELS_TOKEN",
+        "env_key": "GITHUB_TOKEN",
         "max_tokens": 4096,
         "cost_per_1k_input": 0.0,
     },
@@ -356,6 +356,12 @@ SELF_ASSESS_SYSTEM = textwrap.dedent("""\
     - If the journal contains a SUCCESS entry for a topic (e.g. 'API key configured', 'provider available'), treat that topic as RESOLVED — do NOT propose it again.
     - Never propose adding or changing environment variables / API keys when a SUCCESS entry already confirms the LLM is working (the very fact you are running proves a key is present).
     - Focus only on improvements to the Python source code or test suite in the repository.
+    CRITICAL RULES — violations will cause automatic failure:
+    - NEVER propose changes to LLM API keys, environment variables, secrets, or provider configuration. The fact that you are responding proves the LLM is working. Any such proposal will be rejected.
+    - NEVER add new package imports (e.g. cryptography, keyring) that are not already used in the codebase.
+    - NEVER remove or rename existing public functions — this will break tests.
+    - NEVER replace an entire large file — use targeted, minimal changes.
+    - Prefer adding new tests, fixing bugs, or improving existing code over adding new features.
 """)
 
 SELF_ASSESS_PROMPT = textwrap.dedent("""\
@@ -460,6 +466,12 @@ PATCH_SYSTEM = textwrap.dedent("""\
     5. Follow PEP 8 style. Do NOT add or remove imports that are unrelated to the change.
     6. Add docstrings where missing only for functions you are adding or modifying.
     7. Always include test code if you add new functionality.
+    CRITICAL CONSTRAINTS — violating these causes automatic rejection:
+    - NEVER add imports for packages not already in requirements.txt (e.g. no cryptography, keyring, vault).
+    - NEVER remove or rename existing functions or classes.
+    - NEVER modify LLM provider configuration, API key handling, or environment variable loading.
+    - NEVER replace the entire content of a large file (>=150 lines). Use unified diff.
+    - Preserve ALL existing tests when modifying test files — only ADD new tests.
 """)
 
 PATCH_PROMPT = textwrap.dedent("""\
