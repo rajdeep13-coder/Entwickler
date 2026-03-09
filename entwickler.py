@@ -20,6 +20,7 @@ import re
 import subprocess
 import sys
 import textwrap
+import time
 import traceback
 from datetime import datetime, timezone
 from pathlib import Path
@@ -121,7 +122,7 @@ LLM_PROVIDERS: list[dict[str, Any]] = [
     },
     {
         "name": "gemini-flash",
-        "model": "gemini/gemini-1.5-flash",
+        "model": "gemini/gemini-2.0-flash",
         "env_key": "GEMINI_API_KEY",
         "max_tokens": 8192,
         "cost_per_1k_input": 0.0001,
@@ -205,18 +206,28 @@ def call_llm(prompt: str, system: str = "", max_tokens: int = 4096) -> str:
         cost_estimate = (token_estimate / 1000) * provider["cost_per_1k_input"]
         log.info(f"Estimated cost: ~${cost_estimate:.4f} ({token_estimate:.0f} tokens)")
 
-        try:
-            response = litellm.completion(
-                model=provider["model"],
-                messages=messages,
-                max_tokens=min(max_tokens, provider["max_tokens"]),
-                api_key=os.environ.get(provider["env_key"]),
-            )
-            return response.choices[0].message.content or ""
-        except Exception as e:
-            log.warning(f"Provider {provider['name']} failed: {e} — trying next provider")
-            last_errors.append(f"{provider['name']}: {e}")
-            continue
+        retries = 2
+        for attempt in range(retries):
+            try:
+                response = litellm.completion(
+                    model=provider["model"],
+                    messages=messages,
+                    max_tokens=min(max_tokens, provider["max_tokens"]),
+                    api_key=os.environ.get(provider["env_key"]),
+                )
+                return response.choices[0].message.content or ""
+            except litellm.RateLimitError as e:
+                if attempt < retries - 1:
+                    wait = 2 ** attempt  # 1s then 2s
+                    log.warning(f"Provider {provider['name']} rate-limited, retrying in {wait}s...")
+                    time.sleep(wait)
+                else:
+                    log.warning(f"Provider {provider['name']} failed: {e} — trying next provider")
+                    last_errors.append(f"{provider['name']}: {e}")
+            except Exception as e:
+                log.warning(f"Provider {provider['name']} failed: {e} — trying next provider")
+                last_errors.append(f"{provider['name']}: {e}")
+                break
 
     raise RuntimeError("All LLM providers failed:\n" + "\n".join(last_errors))
 
@@ -340,7 +351,11 @@ SELF_ASSESS_SYSTEM = textwrap.dedent("""\
     Your goal is to identify the SINGLE most impactful improvement you can make to your own codebase right now.
     Be precise, focused, and pragmatic. Small correct changes beat large risky ones.
     Always think about: correctness > security > architecture > tests > performance > UX.
-    If the most recent journal entry records a FAILURE for the same category as your top candidate improvement, deprioritize that category and pick the next most impactful improvement instead.
+    Rules for reading the journal:
+    - If the most recent journal entry records a FAILURE for the same category as your top candidate improvement, deprioritize that category and pick the next most impactful improvement instead.
+    - If the journal contains a SUCCESS entry for a topic (e.g. 'API key configured', 'provider available'), treat that topic as RESOLVED — do NOT propose it again.
+    - Never propose adding or changing environment variables / API keys when a SUCCESS entry already confirms the LLM is working (the very fact you are running proves a key is present).
+    - Focus only on improvements to the Python source code or test suite in the repository.
 """)
 
 SELF_ASSESS_PROMPT = textwrap.dedent("""\
@@ -438,11 +453,13 @@ PATCH_SYSTEM = textwrap.dedent("""\
     You are Entwickler, a self-evolving coding agent. You are implementing a specific code improvement.
     Generate a precise, minimal, correct code change. Follow these rules:
     1. If the file is small (<150 lines), return the COMPLETE new file content.
-    2. If the file is large, return a unified diff (--- a/file +++ b/file format).
-    3. Include proper Python 3.11+ type hints.
-    4. Follow PEP 8 style.
-    5. Add docstrings where missing.
-    6. Always include test code if you add new functionality.
+    2. If the file is large (>=150 lines), you MUST return a unified diff (--- a/file +++ b/file format).
+       NEVER return a complete file replacement for large files — you will lose existing functions.
+    3. A unified diff must only change the lines relevant to the improvement; all other lines stay identical.
+    4. Include proper Python 3.11+ type hints.
+    5. Follow PEP 8 style. Do NOT add or remove imports that are unrelated to the change.
+    6. Add docstrings where missing only for functions you are adding or modifying.
+    7. Always include test code if you add new functionality.
 """)
 
 PATCH_PROMPT = textwrap.dedent("""\
@@ -486,10 +503,9 @@ def generate_patch(assessment: dict[str, Any], sources: dict[str, str]) -> dict[
             fpath = REPO_ROOT / fname
             if fpath.exists():
                 content = fpath.read_text(encoding="utf-8")
-        was_truncated = len(content) > MAX_SOURCE_PREVIEW_LENGTH
-        preview = content[:MAX_SOURCE_PREVIEW_LENGTH]
-        truncation_note = "\n... [truncated to 2000 chars for context window]" if was_truncated else ""
-        file_contents += f"\n### {fname}\n```python\n{preview}{truncation_note}\n```\n"
+        # Send full file content — truncation causes the LLM to generate incomplete
+        # replacements that destroy functions beyond the truncation point.
+        file_contents += f"\n### {fname}\n```python\n{content}\n```\n"
 
     prompt = PATCH_PROMPT.format(
         title=assessment.get("title", ""),
@@ -508,26 +524,24 @@ def generate_patch(assessment: dict[str, Any], sources: dict[str, str]) -> dict[
 def parse_patch_response(response: str) -> dict[str, str]:
     """
     Parse LLM response into a mapping of filepath -> new content.
-    Handles both complete file blocks and unified diff blocks.
+    Handles both complete file blocks (any language tag) and unified diff blocks.
     """
     patches: dict[str, str] = {}
 
-    # Match ```python:path/to/file.py or ```diff:path/to/file.py blocks
+    # Match ```<any-lang>:path/to/file blocks — language tag is just a hint.
+    # Examples: ```python:foo.py  ```diff:foo.py  ```env:.env  ```yaml:config.yml
     pattern = re.compile(
-        r"```(?P<type>python|diff):(?P<path>[^\n]+)\n(?P<content>.*?)```",
+        r"```(?P<type>[a-zA-Z0-9_+-]*):(?P<path>[^\n]+)\n(?P<content>.*?)```",
         re.DOTALL,
     )
 
     for match in pattern.finditer(response):
-        block_type = match.group("type")
+        block_type = match.group("type").lower()
         fpath = match.group("path").strip()
         content = match.group("content")
 
-        if block_type == "python":
-            # Complete file replacement
-            patches[fpath] = content
-        elif block_type == "diff":
-            # Apply diff to existing file
+        if block_type == "diff":
+            # Apply unified diff to existing file
             existing = ""
             full_path = REPO_ROOT / fpath
             if full_path.exists():
@@ -537,6 +551,12 @@ def parse_patch_response(response: str) -> dict[str, str]:
                 patches[fpath] = patched
             else:
                 log.warning(f"Failed to apply diff to {fpath}, skipping")
+        else:
+            # Any other tag (python, env, yaml, bash, text, …) → full file replacement
+            patches[fpath] = content
+
+    if not patches:
+        log.debug(f"parse_patch_response: no parseable blocks found. Raw response (first 500 chars):\n{response[:500]}")
 
     return patches
 
