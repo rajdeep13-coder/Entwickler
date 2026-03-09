@@ -14,6 +14,7 @@ import os
 import textwrap
 import tempfile
 from pathlib import Path
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -342,12 +343,12 @@ def test_get_available_provider_finds_cohere(monkeypatch: pytest.MonkeyPatch) ->
 
 
 def test_get_available_provider_finds_github_models(monkeypatch: pytest.MonkeyPatch) -> None:
-    """get_available_provider finds GitHub Models when GH_MODELS_TOKEN is set."""
+    """get_available_provider finds GitHub Models when GITHUB_TOKEN is set."""
     from entwickler import LLM_PROVIDERS  # type: ignore[import]
 
     for provider in LLM_PROVIDERS:
         monkeypatch.delenv(provider["env_key"], raising=False)
-    monkeypatch.setenv("GH_MODELS_TOKEN", "ghp_test-token")
+    monkeypatch.setenv("GITHUB_TOKEN", "ghp_test-token")
 
     from entwickler import get_available_provider  # type: ignore[import]
 
@@ -378,7 +379,7 @@ def test_evolution_cycle_returns_none_when_no_api_key(monkeypatch: pytest.Monkey
 
 
 def test_select_skill_returns_highest_priority() -> None:
-    """select_skill returns the highest-priority skill."""
+    """select_skill returns a valid skill from the list."""
     from entwickler import select_skill  # type: ignore[import]
 
     skills = [
@@ -388,7 +389,7 @@ def test_select_skill_returns_highest_priority() -> None:
     ]
     selected = select_skill(skills, {})
     assert selected is not None
-    assert selected["name"] == "critical_skill"
+    assert selected in skills
 
 
 def test_select_skill_returns_none_for_empty_list() -> None:
@@ -397,6 +398,70 @@ def test_select_skill_returns_none_for_empty_list() -> None:
 
     selected = select_skill([], {})
     assert selected is None
+
+
+def test_select_skill_avoids_recent_journal_categories() -> None:
+    """select_skill prefers skills whose category was NOT recently attempted."""
+    from entwickler import select_skill  # type: ignore[import]
+
+    skills = [
+        {"name": "security_skill", "priority": "high", "category": "security"},
+        {"name": "test_skill", "priority": "medium", "category": "test"},
+        {"name": "perf_skill", "priority": "low", "category": "performance"},
+    ]
+    # Journal shows security was recently attempted
+    journal = (
+        "## Evolution Attempt [FAILURE] — 20260309-010000\n"
+        "**Category**: security\n"
+        "**Title**: Fix something\n"
+    )
+    context = {"journal": journal}
+
+    # Run many times — security_skill should rarely (or never) be picked
+    picks = [select_skill(skills, context)["name"] for _ in range(50)]  # type: ignore[index]
+    # The "fresh" pool is [test_skill, perf_skill]; security_skill should be excluded
+    assert "test_skill" in picks or "perf_skill" in picks
+    # security_skill should NOT appear because it's filtered out
+    assert "security_skill" not in picks
+
+
+def test_select_skill_varies_over_runs() -> None:
+    """select_skill produces variety across multiple invocations."""
+    from entwickler import select_skill  # type: ignore[import]
+
+    skills = [
+        {"name": "skill_a", "priority": "medium", "category": "test"},
+        {"name": "skill_b", "priority": "medium", "category": "architecture"},
+        {"name": "skill_c", "priority": "medium", "category": "performance"},
+    ]
+    context: dict[str, Any] = {}
+    picks = {select_skill(skills, context)["name"] for _ in range(100)}  # type: ignore[index]
+    # With equal-weight random selection, we should see at least 2 distinct skills
+    assert len(picks) >= 2
+
+
+def test_recent_journal_categories_extracts_categories() -> None:
+    """_recent_journal_categories extracts category values from journal."""
+    from entwickler import _recent_journal_categories  # type: ignore[import]
+
+    journal = (
+        "**Category**: security\n"
+        "Some text\n"
+        "**Category**: test\n"
+        "More text\n"
+        "**Category**: architecture\n"
+    )
+    cats = _recent_journal_categories(journal)
+    assert cats == ["security", "test", "architecture"]
+
+
+def test_recent_journal_categories_respects_max() -> None:
+    """_recent_journal_categories limits results to max_entries."""
+    from entwickler import _recent_journal_categories  # type: ignore[import]
+
+    journal = "\n".join(f"**Category**: cat{i}" for i in range(10))
+    cats = _recent_journal_categories(journal, max_entries=3)
+    assert len(cats) == 3
 
 
 # ---------------------------------------------------------------------------
