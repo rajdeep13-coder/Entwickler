@@ -2,6 +2,32 @@
 
 
 ---
+## Evolution Attempt [FAILURE] — 20260323-015126
+**Timestamp**: 2026-03-23 01:51:49 UTC  
+**Status**: FAILURE  
+**Priority**: HIGH  
+**Category**: refactor  
+**Title**: Refactor Duplicate Logic in Test Suite  
+
+### Rationale
+Test suite has duplicate logic in multiple test functions, making maintenance harder and increasing the chance of bugs. Refactoring will simplify tests and ensure they remain functional as the agent evolves.
+
+### Approach
+Extract duplicate logic into a separate utility function that can be reused across multiple tests. This will involve identifying the common logic, creating a new function with appropriate parameters, and modifying existing tests to call the new function.
+
+### Error
+```
+Traceback (most recent call last):
+  File "/home/runner/work/Entwickler/Entwickler/entwickler.py", line 1008, in evolution_cycle
+    backups = apply_patches(patches)
+              ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Entwickler/Entwickler/entwickler.py", line 693, in apply_patches
+    raise ValueError(f"Generated code has syntax errors: {fpath}")
+ValueError: Generated code has syntax errors: test_entwickler.py
+
+```
+
+---
 ## Evolution Attempt [FAILURE] — 20260322-202115
 **Timestamp**: 2026-03-22 20:21:24 UTC  
 **Status**: FAILURE  
