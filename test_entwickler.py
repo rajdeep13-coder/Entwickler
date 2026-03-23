@@ -13,6 +13,7 @@ import json
 import os
 import textwrap
 import tempfile
+import types
 from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -355,6 +356,49 @@ def test_get_available_provider_finds_github_models(monkeypatch: pytest.MonkeyPa
     result = get_available_provider()
     assert result is not None
     assert result["name"] == "github-models"
+
+
+def test_call_llm_trims_prompt_to_provider_limit(monkeypatch: pytest.MonkeyPatch) -> None:
+    """call_llm truncates oversized prompts to fit provider input limits."""
+    import sys
+
+    from entwickler import LLM_PROVIDERS, TOKEN_TO_WORD_RATIO, call_llm  # type: ignore[import]
+
+    # Ensure only GitHub provider is available for deterministic selection
+    for provider in LLM_PROVIDERS:
+        monkeypatch.delenv(provider["env_key"], raising=False)
+    monkeypatch.setenv("GITHUB_TOKEN", "dummy")
+
+    captured: dict[str, Any] = {}
+
+    class FakeResponse:
+        def __init__(self, content: str) -> None:
+            self.choices = [types.SimpleNamespace(message=types.SimpleNamespace(content=content))]
+
+    def fake_completion(model: str, messages: list[dict[str, str]], max_tokens: int, **kwargs: Any) -> FakeResponse:
+        captured["messages"] = messages
+        captured["model"] = model
+        captured["max_tokens"] = max_tokens
+        captured["api_key"] = kwargs.get("api_key")
+        return FakeResponse("ok")
+
+    fake_litellm = types.SimpleNamespace(
+        completion=fake_completion,
+        RateLimitError=Exception,
+    )
+    monkeypatch.setitem(sys.modules, "litellm", fake_litellm)
+
+    oversized_prompt_words = 10000
+    long_prompt = "word " * oversized_prompt_words
+    result = call_llm(long_prompt, system="sys", max_tokens=1024)
+    assert result == "ok"
+
+    user_message = captured["messages"][-1]["content"]
+    provider = [p for p in LLM_PROVIDERS if p["name"] == "github-models"][0]
+    max_input_tokens = provider.get("max_input_tokens", provider["max_tokens"])
+    allowed_prompt_words = max(int(max_input_tokens / TOKEN_TO_WORD_RATIO) - len("sys".split()), 0)
+    assert len(user_message.split()) <= allowed_prompt_words
+    assert len(user_message.split()) < len(long_prompt.split())
 
 
 # ---------------------------------------------------------------------------
