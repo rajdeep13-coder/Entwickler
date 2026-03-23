@@ -2,6 +2,32 @@
 
 
 ---
+## Evolution Attempt [FAILURE] — 20260323-125613
+**Timestamp**: 2026-03-23 12:56:37 UTC  
+**Status**: FAILURE  
+**Priority**: HIGH  
+**Category**: refactor  
+**Title**: Refactor duplicated logic in test_entwickler.py  
+
+### Rationale
+The test suite contains duplicated logic which can be refactored to make the code more maintainable and easier to understand. This improvement aligns with the suggested focus of 'refactor' and does not overlap with recently attempted categories.
+
+### Approach
+Identify and extract duplicated logic in test_entwickler.py into separate functions or classes, and then replace the duplicated code with calls to these new functions or classes.
+
+### Error
+```
+Traceback (most recent call last):
+  File "/home/runner/work/Entwickler/Entwickler/entwickler.py", line 1008, in evolution_cycle
+    backups = apply_patches(patches)
+              ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Entwickler/Entwickler/entwickler.py", line 693, in apply_patches
+    raise ValueError(f"Generated code has syntax errors: {fpath}")
+ValueError: Generated code has syntax errors: test_entwickler.py
+
+```
+
+---
 ## Evolution Attempt [FAILURE] — 20260323-084957
 **Timestamp**: 2026-03-23 08:50:06 UTC  
 **Status**: FAILURE  
