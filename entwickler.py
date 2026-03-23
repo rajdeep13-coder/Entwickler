@@ -211,6 +211,7 @@ def call_llm(prompt: str, system: str = "", max_tokens: int = 4096) -> str:
         prompt_words = prompt_for_provider.split()
         max_input_tokens = provider.get("max_input_tokens", provider["max_tokens"])
         estimated_input_tokens = (len(system_words) + len(prompt_words)) * TOKEN_TO_WORD_RATIO
+        original_input_tokens = estimated_input_tokens
 
         if estimated_input_tokens > max_input_tokens:
             allowed_prompt_words = max(
@@ -224,13 +225,18 @@ def call_llm(prompt: str, system: str = "", max_tokens: int = 4096) -> str:
                 prompt_words = prompt_words[:allowed_prompt_words]
                 prompt_for_provider = " ".join(prompt_words)
                 estimated_input_tokens = (len(system_words) + len(prompt_words)) * TOKEN_TO_WORD_RATIO
+                log.info(
+                    f"Truncated prompt from ~{original_input_tokens:.0f} to ~{estimated_input_tokens:.0f} tokens for provider {provider['name']}"
+                )
 
         messages.append({"role": "user", "content": prompt_for_provider})
+        final_prompt_words = prompt_words
 
         log.info(f"Calling LLM: {provider['name']} ({provider['model']})")
 
         # Estimate cost using token-to-word ratio approximation
-        token_estimate = (len(prompt_words) + len(system_words)) * TOKEN_TO_WORD_RATIO
+        # This estimate reflects the final (possibly truncated) prompt actually sent.
+        token_estimate = (len(final_prompt_words) + len(system_words)) * TOKEN_TO_WORD_RATIO
         cost_estimate = (token_estimate / 1000) * provider["cost_per_1k_input"]
         log.info(f"Estimated cost: ~${cost_estimate:.4f} ({token_estimate:.0f} tokens)")
 

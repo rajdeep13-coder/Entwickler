@@ -375,10 +375,11 @@ def test_call_llm_trims_prompt_to_provider_limit(monkeypatch: pytest.MonkeyPatch
         def __init__(self, content: str) -> None:
             self.choices = [types.SimpleNamespace(message=types.SimpleNamespace(content=content))]
 
-    def fake_completion(model: str, messages: list[dict[str, str]], max_tokens: int, api_key: str | None) -> FakeResponse:
+    def fake_completion(model: str, messages: list[dict[str, str]], max_tokens: int, **kwargs: Any) -> FakeResponse:
         captured["messages"] = messages
         captured["model"] = model
         captured["max_tokens"] = max_tokens
+        captured["api_key"] = kwargs.get("api_key")
         return FakeResponse("ok")
 
     fake_litellm = types.SimpleNamespace(
@@ -387,7 +388,8 @@ def test_call_llm_trims_prompt_to_provider_limit(monkeypatch: pytest.MonkeyPatch
     )
     monkeypatch.setitem(sys.modules, "litellm", fake_litellm)
 
-    long_prompt = "word " * 10000
+    oversized_prompt_words = 10000
+    long_prompt = "word " * oversized_prompt_words
     result = call_llm(long_prompt, system="sys", max_tokens=1024)
     assert result == "ok"
 
