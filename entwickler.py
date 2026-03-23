@@ -111,6 +111,7 @@ LLM_PROVIDERS: list[dict[str, Any]] = [
         "model": "groq/llama-3.3-70b-versatile",
         "env_key": "GROQ_API_KEY",
         "max_tokens": 8192,
+        "max_input_tokens": 12000,
         "cost_per_1k_input": 0.0006,
     },
     {
@@ -118,6 +119,7 @@ LLM_PROVIDERS: list[dict[str, Any]] = [
         "model": "groq/llama-3.1-8b-instant",
         "env_key": "GROQ_API_KEY",
         "max_tokens": 8192,
+        "max_input_tokens": 6000,
         "cost_per_1k_input": 0.0001,
     },
     {
@@ -125,6 +127,7 @@ LLM_PROVIDERS: list[dict[str, Any]] = [
         "model": "gemini/gemini-2.0-flash",
         "env_key": "GEMINI_API_KEY",
         "max_tokens": 8192,
+        "max_input_tokens": 8000,
         "cost_per_1k_input": 0.0001,
     },
     {
@@ -132,6 +135,7 @@ LLM_PROVIDERS: list[dict[str, Any]] = [
         "model": "deepseek/deepseek-coder",
         "env_key": "DEEPSEEK_API_KEY",
         "max_tokens": 8192,
+        "max_input_tokens": 8192,
         "cost_per_1k_input": 0.00014,
     },
     {
@@ -139,6 +143,7 @@ LLM_PROVIDERS: list[dict[str, Any]] = [
         "model": "anthropic/claude-3-5-sonnet-20241022",
         "env_key": "ANTHROPIC_API_KEY",
         "max_tokens": 8192,
+        "max_input_tokens": 8192,
         "cost_per_1k_input": 0.003,
     },
     {
@@ -146,6 +151,7 @@ LLM_PROVIDERS: list[dict[str, Any]] = [
         "model": "mistral/mistral-small-latest",
         "env_key": "MISTRAL_API_KEY",
         "max_tokens": 8192,
+        "max_input_tokens": 8192,
         "cost_per_1k_input": 0.001,
     },
     {
@@ -153,6 +159,7 @@ LLM_PROVIDERS: list[dict[str, Any]] = [
         "model": "cohere/command-r",
         "env_key": "COHERE_API_KEY",
         "max_tokens": 4096,
+        "max_input_tokens": 4096,
         "cost_per_1k_input": 0.0005,
     },
     {
@@ -160,6 +167,7 @@ LLM_PROVIDERS: list[dict[str, Any]] = [
         "model": "github/gpt-4o-mini",
         "env_key": "GITHUB_TOKEN",
         "max_tokens": 4096,
+        "max_input_tokens": 8000,
         "cost_per_1k_input": 0.0,
     },
 ]
@@ -197,12 +205,32 @@ def call_llm(prompt: str, system: str = "", max_tokens: int = 4096) -> str:
         messages: list[dict[str, str]] = []
         if system:
             messages.append({"role": "system", "content": system})
-        messages.append({"role": "user", "content": prompt})
+
+        prompt_for_provider = prompt
+        system_words = system.split() if system else []
+        prompt_words = prompt_for_provider.split()
+        max_input_tokens = provider.get("max_input_tokens", provider["max_tokens"])
+        estimated_input_tokens = (len(system_words) + len(prompt_words)) * TOKEN_TO_WORD_RATIO
+
+        if estimated_input_tokens > max_input_tokens:
+            allowed_prompt_words = max(
+                int(max_input_tokens / TOKEN_TO_WORD_RATIO) - len(system_words),
+                0,
+            )
+            if len(prompt_words) > allowed_prompt_words:
+                log.warning(
+                    f"Prompt too large for {provider['name']} (est. {estimated_input_tokens:.0f} tokens) — truncating to fit limit {max_input_tokens}"
+                )
+                prompt_words = prompt_words[:allowed_prompt_words]
+                prompt_for_provider = " ".join(prompt_words)
+                estimated_input_tokens = (len(system_words) + len(prompt_words)) * TOKEN_TO_WORD_RATIO
+
+        messages.append({"role": "user", "content": prompt_for_provider})
 
         log.info(f"Calling LLM: {provider['name']} ({provider['model']})")
 
         # Estimate cost using token-to-word ratio approximation
-        token_estimate = len(prompt.split()) * TOKEN_TO_WORD_RATIO
+        token_estimate = (len(prompt_words) + len(system_words)) * TOKEN_TO_WORD_RATIO
         cost_estimate = (token_estimate / 1000) * provider["cost_per_1k_input"]
         log.info(f"Estimated cost: ~${cost_estimate:.4f} ({token_estimate:.0f} tokens)")
 
