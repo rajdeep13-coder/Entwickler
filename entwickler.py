@@ -147,7 +147,7 @@ LLM_PROVIDERS: list[dict[str, Any]] = [
     },
     {
         "name": "openrouter",
-        # OpenRouter uses slash-separated provider/model identifiers.
+        # OpenRouter routes via a prefix plus upstream provider/model (slash-separated).
         "model": "openrouter/anthropic/claude-3.5-sonnet",
         "env_key": "OPENROUTER_API_KEY",
         "api_base": "https://openrouter.ai/api/v1",
@@ -260,11 +260,11 @@ def call_llm(prompt: str, system: str = "", max_tokens: int = 4096) -> str:
         log.info(f"Estimated cost: ~${cost_estimate:.4f} ({token_estimate:.0f} tokens)")
 
         retries = 2
+        request_kwargs: dict[str, Any] = {}
+        if provider.get("api_base"):
+            request_kwargs["api_base"] = provider["api_base"]
         for attempt in range(retries):
             try:
-                request_kwargs: dict[str, Any] = {}
-                if provider.get("api_base"):
-                    request_kwargs["api_base"] = provider["api_base"]
                 response = litellm.completion(
                     model=provider["model"],
                     messages=messages,
