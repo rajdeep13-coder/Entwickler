@@ -91,7 +91,7 @@ _SECRET_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ("Google/Gemini API key", re.compile(r"AIzaSy[0-9A-Za-z_-]{33}")),
     ("OpenAI API key", re.compile(r"sk-[A-Za-z0-9]{20,}")),
     # OpenRouter keys start with sk-or-v1- followed by an alphanumeric payload (~48 chars typical).
-    ("OpenRouter API key", re.compile(r"sk-or-v1-[A-Za-z0-9]{32,96}")),
+    ("OpenRouter API key", re.compile(r"sk-or-v1-[A-Za-z0-9]{40,56}")),
     ("Anthropic API key", re.compile(r"sk-ant-[A-Za-z0-9_-]{20,}")),
     ("AWS Access Key", re.compile(r"AKIA[0-9A-Z]{16}")),
     ("GitHub PAT (classic)", re.compile(r"ghp_[A-Za-z0-9]{36}")),
@@ -158,7 +158,7 @@ LLM_PROVIDERS: list[dict[str, Any]] = [
         "max_tokens": 8192,
         "max_input_tokens": 8192,
         # Pricing varies by routed model; this matches published Claude 3.5 Sonnet
-        # input pricing and may change if OpenRouter adds marketplace fees.
+        # input pricing as of 2026-03-29 and may change if OpenRouter adds fees.
         "cost_per_1k_input": 0.003,
     },
     {
