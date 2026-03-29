@@ -265,9 +265,7 @@ def call_llm(prompt: str, system: str = "", max_tokens: int = 4096) -> str:
         log.info(f"Estimated cost: ~${cost_estimate:.4f} ({token_estimate:.0f} tokens)")
 
         retries = 2
-        request_kwargs: dict[str, Any] = {}
-        if provider.get("api_base"):
-            request_kwargs["api_base"] = provider["api_base"]
+        api_kwargs = {"api_base": provider["api_base"]} if provider.get("api_base") else {}
         for attempt in range(retries):
             try:
                 response = litellm.completion(
@@ -275,7 +273,7 @@ def call_llm(prompt: str, system: str = "", max_tokens: int = 4096) -> str:
                     messages=messages,
                     max_tokens=min(max_tokens, provider["max_tokens"]),
                     api_key=os.environ.get(provider["env_key"]),
-                    **request_kwargs,
+                    **api_kwargs,
                 )
                 return response.choices[0].message.content or ""
             except litellm.RateLimitError as e:
