@@ -58,24 +58,26 @@ GITHUB_API = "https://api.github.com"
 # Tuning constants (extracted for readability and easy adjustment)
 # ---------------------------------------------------------------------------
 
-# Approximate ratio of tokens to words in typical English/code text
-TOKEN_TO_WORD_RATIO: float = 1.3
+# Approximate ratio of tokens to words in typical Python/code+text content.
+# Evidence from production journal: actual Groq-measured token counts are ~2.1x
+# the naive word-split count, so 1.8 gives a conservative (safe) buffer.
+TOKEN_TO_WORD_RATIO: float = 1.8
 
 # Journal compaction: if journal exceeds this length, keep only the tail
 JOURNAL_MAX_LENGTH: int = 8000
 JOURNAL_KEEP_LENGTH: int = 5000
 
 # Context assembly: how many chars of source to include per file preview
-MAX_SOURCE_PREVIEW_LENGTH: int = 2000
+MAX_SOURCE_PREVIEW_LENGTH: int = 1500
 
 # Context assembly: max number of source files to include in the summary
-MAX_FILES_IN_SUMMARY: int = 5
+MAX_FILES_IN_SUMMARY: int = 3
 
 # Context assembly: max chars of recent journal to send to LLM
-JOURNAL_RECENT_CHARS: int = 2000
+JOURNAL_RECENT_CHARS: int = 1500
 
 # Context assembly: max chars of IDENTITY.md to include in prompt
-IDENTITY_MAX_CHARS: int = 1500
+IDENTITY_MAX_CHARS: int = 1000
 
 # Journal: max chars of check output to log per check
 CHECK_OUTPUT_MAX_CHARS: int = 4000
@@ -111,7 +113,8 @@ LLM_PROVIDERS: list[dict[str, Any]] = [
         "model": "groq/llama-3.3-70b-versatile",
         "env_key": "GROQ_API_KEY",
         "max_tokens": 8192,
-        "max_input_tokens": 12000,
+        # Free tier TPM cap is 12 000/min; leaving headroom for burst usage.
+        "max_input_tokens": 6000,
         "cost_per_1k_input": 0.0006,
     },
     {
@@ -119,7 +122,8 @@ LLM_PROVIDERS: list[dict[str, Any]] = [
         "model": "groq/llama-3.1-8b-instant",
         "env_key": "GROQ_API_KEY",
         "max_tokens": 8192,
-        "max_input_tokens": 6000,
+        # Free tier TPM cap is 6 000/min; keep well under to survive burst.
+        "max_input_tokens": 3000,
         "cost_per_1k_input": 0.0001,
     },
     {
@@ -127,7 +131,8 @@ LLM_PROVIDERS: list[dict[str, Any]] = [
         "model": "gemini/gemini-2.0-flash",
         "env_key": "GEMINI_API_KEY",
         "max_tokens": 8192,
-        "max_input_tokens": 8000,
+        # Tightened from 8 000 to account for TOKEN_TO_WORD_RATIO under-estimation.
+        "max_input_tokens": 6000,
         "cost_per_1k_input": 0.0001,
     },
     {
@@ -167,7 +172,8 @@ LLM_PROVIDERS: list[dict[str, Any]] = [
         "model": "github/gpt-4o-mini",
         "env_key": "GITHUB_TOKEN",
         "max_tokens": 4096,
-        "max_input_tokens": 8000,
+        # Tightened from 8 000 to account for TOKEN_TO_WORD_RATIO under-estimation.
+        "max_input_tokens": 6000,
         "cost_per_1k_input": 0.0,
     },
 ]
