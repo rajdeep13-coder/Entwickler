@@ -147,16 +147,17 @@ LLM_PROVIDERS: list[dict[str, Any]] = [
     },
     {
         "name": "openrouter",
-        # OpenRouter routes via a prefix plus upstream provider/model (slash-separated).
-        # Catalog names follow OpenRouter's dotted style (e.g., claude-3.5-sonnet),
-        # which differs from Anthropic's direct API identifier used above.
+        # litellm routes OpenRouter via an "openrouter/" prefix plus the upstream
+        # provider/model path (slash-separated). The catalog name remains
+        # anthropic/claude-3.5-sonnet.
         "model": "openrouter/anthropic/claude-3.5-sonnet",
         "env_key": "OPENROUTER_API_KEY",
         "api_base": "https://openrouter.ai/api/v1",
         # Use conservative limits to stay compatible across routed upstream models.
         "max_tokens": 8192,
         "max_input_tokens": 8192,
-        # Pricing varies by routed model; this estimates Claude 3.5 Sonnet input cost.
+        # Pricing varies by routed model; this estimates Claude 3.5 Sonnet via the
+        # OpenRouter marketplace (typically higher than direct Anthropic rates).
         "cost_per_1k_input": 0.003,
     },
     {
