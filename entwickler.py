@@ -90,6 +90,8 @@ CHECK_OUTPUT_MAX_CHARS: int = 4000
 _SECRET_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ("Google/Gemini API key", re.compile(r"AIzaSy[0-9A-Za-z_-]{33}")),
     ("OpenAI API key", re.compile(r"sk-[A-Za-z0-9]{20,}")),
+    # OpenRouter keys start with sk-or-v1- followed by an alphanumeric payload (~48 chars typical).
+    ("OpenRouter API key", re.compile(r"sk-or-v1-[A-Za-z0-9]{40,56}")),
     ("Anthropic API key", re.compile(r"sk-ant-[A-Za-z0-9_-]{20,}")),
     ("AWS Access Key", re.compile(r"AKIA[0-9A-Z]{16}")),
     ("GitHub PAT (classic)", re.compile(r"ghp_[A-Za-z0-9]{36}")),
@@ -142,6 +144,22 @@ LLM_PROVIDERS: list[dict[str, Any]] = [
         "max_tokens": 8192,
         "max_input_tokens": 8192,
         "cost_per_1k_input": 0.00014,
+    },
+    {
+        "name": "openrouter",
+        # litellm routes OpenRouter via an "openrouter/" prefix plus the upstream
+        # provider/model path (slash-separated). The catalog name remains
+        # anthropic/claude-3.5-sonnet.
+        "model": "openrouter/anthropic/claude-3.5-sonnet",
+        "env_key": "OPENROUTER_API_KEY",
+        "api_base": "https://openrouter.ai/api/v1",
+        # Cap tokens conservatively to avoid large prompts via the router even though
+        # the upstream model allows far larger contexts (e.g., 200k input for Sonnet).
+        "max_tokens": 8192,
+        "max_input_tokens": 8192,
+        # Pricing varies by routed model; this matches published Claude 3.5 Sonnet
+        # input pricing as of 2026-03-29 and may change if OpenRouter adds fees.
+        "cost_per_1k_input": 0.003,
     },
     {
         "name": "anthropic-claude",
@@ -247,6 +265,7 @@ def call_llm(prompt: str, system: str = "", max_tokens: int = 4096) -> str:
         log.info(f"Estimated cost: ~${cost_estimate:.4f} ({token_estimate:.0f} tokens)")
 
         retries = 2
+        api_kwargs = {"api_base": provider["api_base"]} if provider.get("api_base") else {}
         for attempt in range(retries):
             try:
                 response = litellm.completion(
@@ -254,6 +273,7 @@ def call_llm(prompt: str, system: str = "", max_tokens: int = 4096) -> str:
                     messages=messages,
                     max_tokens=min(max_tokens, provider["max_tokens"]),
                     api_key=os.environ.get(provider["env_key"]),
+                    **api_kwargs,
                 )
                 return response.choices[0].message.content or ""
             except litellm.RateLimitError as e:
