@@ -90,8 +90,8 @@ CHECK_OUTPUT_MAX_CHARS: int = 4000
 _SECRET_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ("Google/Gemini API key", re.compile(r"AIzaSy[0-9A-Za-z_-]{33}")),
     ("OpenAI API key", re.compile(r"sk-[A-Za-z0-9]{20,}")),
-    # OpenRouter keys start with sk-or-v1- followed by a bounded alphanumeric string.
-    ("OpenRouter API key", re.compile(r"sk-or-v1-[A-Za-z0-9]{40,64}")),
+    # OpenRouter keys start with sk-or-v1- followed by an alphanumeric payload (~48 chars typical).
+    ("OpenRouter API key", re.compile(r"sk-or-v1-[A-Za-z0-9]{32,96}")),
     ("Anthropic API key", re.compile(r"sk-ant-[A-Za-z0-9_-]{20,}")),
     ("AWS Access Key", re.compile(r"AKIA[0-9A-Z]{16}")),
     ("GitHub PAT (classic)", re.compile(r"ghp_[A-Za-z0-9]{36}")),
