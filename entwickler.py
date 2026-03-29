@@ -153,11 +153,12 @@ LLM_PROVIDERS: list[dict[str, Any]] = [
         "model": "openrouter/anthropic/claude-3.5-sonnet",
         "env_key": "OPENROUTER_API_KEY",
         "api_base": "https://openrouter.ai/api/v1",
-        # Use conservative limits to stay compatible across routed upstream models.
+        # Cap tokens conservatively to avoid large prompts via the router even though
+        # the upstream model allows far larger contexts (e.g., 200k input for Sonnet).
         "max_tokens": 8192,
         "max_input_tokens": 8192,
-        # Pricing varies by routed model; this estimates Claude 3.5 Sonnet via the
-        # OpenRouter marketplace (typically higher than direct Anthropic rates).
+        # Pricing varies by routed model; this matches published Claude 3.5 Sonnet
+        # input pricing and may change if OpenRouter adds marketplace fees.
         "cost_per_1k_input": 0.003,
     },
     {
