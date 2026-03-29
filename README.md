@@ -100,6 +100,7 @@ Add these secrets to your GitHub repository (`Settings -> Secrets -> Actions`):
 |--------|-------------|
 | `ANTHROPIC_API_KEY` | Claude API key (primary LLM) |
 | `GROQ_API_KEY` | Groq/Llama API key (fast/cheap fallback) |
+| `OPENROUTER_API_KEY` | OpenRouter API key (multi-model router) |
 | `GITHUB_TOKEN` | Auto-provided by GitHub Actions |
 
 You need at least **one** LLM API key.
@@ -154,6 +155,7 @@ Entwickler uses [LiteLLM](https://github.com/BerriAI/litellm) for a unified mult
 - **DeepSeek** (deepseek-coder, deepseek-chat)
 - **Mistral** (mistral-large, codestral)
 - **Cohere** (command-r-plus)
+- **OpenRouter** (router to Anthropic/GPT/others via `OPENROUTER_API_KEY`)
 
 The agent auto-selects providers based on cost/availability and falls back gracefully.
 
