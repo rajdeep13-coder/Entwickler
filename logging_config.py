@@ -1,15 +1,15 @@
 """
-logging_config.py
+logging_config — Module to configure logging for the application.
 
-This module contains the logging configuration for the application.
+This module extracts the logging configuration.
 """
 
 import logging
-from rich.console import Console
 from rich.logging import RichHandler
+from rich.console import Console
 
 def setup_logging() -> None:
-    """Set up logging configuration."""
+    """Setup the logging configuration for the application."""
     console = Console()
     logging.basicConfig(
         level=logging.INFO,
