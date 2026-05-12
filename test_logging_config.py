@@ -1,15 +1,15 @@
-import logging
-import pytest
-from rich.console import Console
-from logging_config import configure_logging
-
-def test_logging_config(caplog):
-    """Test that the logging configuration is correctly applied."""
-    console = Console()
-    configure_logging(console)
-
-    # Creating a logger and logging a message to test if it works correctly
-    logger = logging.getLogger("test_logger")
-    logger.info("Test Log Message")
-
-    assert "Test Log Message" in caplog.text
+def test_setup_logging(mocker):
+    """Test that setup_logging successfully initializes the logging configuration."""
+    mock_console = mocker.patch('rich.console.Console')
+    mock_handler = mocker.patch('rich.logging.RichHandler')
+    mocker.patch('logging.basicConfig')
+    
+    from logging_config import setup_logging
+    
+    setup_logging()
+    
+    mock_console.assert_called_once()
+    mock_handler.assert_called_once_with(console=mock_console(), rich_tracebacks=True)
+    assert mock_console.call_count == 1
+    assert mock_console.return_value is not None
+    logging.basicConfig.assert_called_once()
