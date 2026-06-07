@@ -2,7 +2,6 @@ import logging
 from rich.logging import RichHandler
 from rich.console import Console
 
-console = Console()
 
 def setup_logging() -> None:
     """Configure logging for the application."""
