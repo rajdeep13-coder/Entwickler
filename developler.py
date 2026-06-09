@@ -1,5 +1,5 @@
-from logging_config import logging_setup
+from logging_config import setup_logging
 
 def main() -> None:
-    logging_setup()
+    setup_logging()
     # Your existing main code follows...
