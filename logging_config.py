@@ -11,3 +11,9 @@ def setup_logging() -> None:
         format="%(message)s",
         handlers=[RichHandler(console=console, rich_tracebacks=True)],
     )
+    console = Console()
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(message)s",
+        handlers=[RichHandler(console=console, rich_tracebacks=True)],
+    )
