@@ -2,6 +2,32 @@
 
 
 ---
+## Evolution Attempt [FAILURE] — 20260612-032456
+**Timestamp**: 2026-06-12 03:25:06 UTC  
+**Status**: FAILURE  
+**Priority**: MEDIUM  
+**Category**: refactor  
+**Title**: Remove Duplicate Logging Configuration  
+
+### Rationale
+The current logging configuration in `entwickler.py` and `logging_config.py` has duplicate setup_logging calls. Removing this duplication will improve code readability and maintainability.
+
+### Approach
+Remove the second logging.basicConfig call in `logging_config.py` to avoid setting up the logging configuration twice.
+
+### Error
+```
+Traceback (most recent call last):
+  File "/home/runner/work/Entwickler/Entwickler/entwickler.py", line 1068, in evolution_cycle
+    backups = apply_patches(patches)
+              ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Entwickler/Entwickler/entwickler.py", line 753, in apply_patches
+    raise ValueError(f"Generated code has syntax errors: {fpath}")
+ValueError: Generated code has syntax errors: logging_config.py
+
+```
+
+---
 ## Evolution Attempt [SUCCESS] — 20260611-084001
 **Timestamp**: 2026-06-11 08:40:13 UTC  
 **Status**: SUCCESS  
