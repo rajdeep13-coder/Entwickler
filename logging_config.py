@@ -6,7 +6,6 @@ from rich.console import Console
 def setup_logging() -> None:
     """Configure logging for the application."""
     console = Console()
-    console = Console()
     logging.basicConfig(
         level=logging.INFO,
         format="%(message)s",
