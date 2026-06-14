@@ -1,4 +1,4 @@
-from logging_config import setup_logging
+from logging_config import setup_logging  # Centralized logging setup
 
 def main() -> None:
     """Main entry point for the application.""" 
