@@ -2,6 +2,32 @@
 
 
 ---
+## Evolution Attempt [FAILURE] — 20260617-151430
+**Timestamp**: 2026-06-17 15:14:41 UTC  
+**Status**: FAILURE  
+**Priority**: MEDIUM  
+**Category**: refactor  
+**Title**: Simplify and Refactor setup_logging Function  
+
+### Rationale
+The setup_logging function is duplicated in developler.py and logging_config.py. Refactoring it into a single, reusable function will reduce code duplication and make maintenance easier.
+
+### Approach
+Create a single setup_logging function in logging_config.py that can be imported and used in developler.py and any other necessary modules. This can be achieved by removing the console creation from the setup_logging function and passing it as a parameter.
+
+### Error
+```
+Traceback (most recent call last):
+  File "/home/runner/work/Entwickler/Entwickler/entwickler.py", line 1068, in evolution_cycle
+    backups = apply_patches(patches)
+              ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Entwickler/Entwickler/entwickler.py", line 753, in apply_patches
+    raise ValueError(f"Generated code has syntax errors: {fpath}")
+ValueError: Generated code has syntax errors: logging_config.py
+
+```
+
+---
 ## Evolution Attempt [SUCCESS] — 20260616-033439
 **Timestamp**: 2026-06-16 03:34:50 UTC  
 **Status**: SUCCESS  
