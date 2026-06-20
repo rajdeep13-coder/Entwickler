@@ -2,6 +2,32 @@
 
 
 ---
+## Evolution Attempt [FAILURE] — 20260620-102917
+**Timestamp**: 2026-06-20 10:29:28 UTC  
+**Status**: FAILURE  
+**Priority**: MEDIUM  
+**Category**: refactor  
+**Title**: Simplify and Unify Logging Configuration  
+
+### Rationale
+The current logging configuration is duplicated and can be simplified. Unifying it will reduce code duplication and make maintenance easier.
+
+### Approach
+Remove the duplicated `setup_logging` function in `logging_config.py` and ensure that the `setup_logging` function correctly configures logging for the application. Modify the `main` function in `developler.py` to call this unified logging setup.
+
+### Error
+```
+Traceback (most recent call last):
+  File "/home/runner/work/Entwickler/Entwickler/entwickler.py", line 1068, in evolution_cycle
+    backups = apply_patches(patches)
+              ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Entwickler/Entwickler/entwickler.py", line 753, in apply_patches
+    raise ValueError(f"Generated code has syntax errors: {fpath}")
+ValueError: Generated code has syntax errors: logging_config.py
+
+```
+
+---
 ## Evolution Attempt [SUCCESS] — 20260620-025051
 **Timestamp**: 2026-06-20 02:50:58 UTC  
 **Status**: SUCCESS  
