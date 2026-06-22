@@ -1,10 +1,8 @@
 from logging_config import setup_logging  # Centralized logging setup
 def main() -> None:
-    """Main entry point for the application.""" 
-    setup_logging()  # Set up logging once for the application
+    """Main entry point for the application."""
     # Your existing main code follows...
 def test_logging_config() -> None:
-    setup_logging()  # Ensure logging is set up once for the application
     setup_logging()
     logging.info("Test logging message")
     # Your existing main code follows...
