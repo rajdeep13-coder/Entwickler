@@ -9,4 +9,4 @@ def setup_logging() -> None:
 
 def log_test_message() -> None:
     """Test the logging setup."""
-    logging.info("Test logging message from log_test_message")
+    
