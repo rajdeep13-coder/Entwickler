@@ -2,6 +2,91 @@
 
 
 ---
+## Evolution Attempt [SUCCESS] — 20260629-212040
+**Timestamp**: 2026-06-29 21:20:53 UTC  
+**Status**: SUCCESS  
+**Priority**: HIGH  
+**Category**: refactor  
+**Title**: Simplify Logging Setup  
+
+### Rationale
+The current logging setup is duplicated in multiple places and can be simplified to make the code more maintainable and efficient. This improvement will make it easier to modify logging settings in the future.
+
+### Approach
+Create a single function to setup logging and call it from the main entry point. Remove duplicated logging setup code from other parts of the codebase.
+
+### Patch Summary
+```
+  logging_config.py: 389 chars
+```
+
+### Tests [PASS]
+```
+============================= test session starts ==============================
+collecting ... collected 50 items
+
+test_entwickler.py::test_entwickler_imports_cleanly PASSED               [  2%]
+test_entwickler.py::test_apply_unified_diff_simple_addition PASSED       [  4%]
+test_entwickler.py::test_apply_unified_diff_simple_removal PASSED        [  6%]
+test_entwickler.py::test_apply_unified_diff_malformed_returns_none PASSED [  8%]
+test_entwickler.py::test_apply_unified_diff_empty_original PASSED        [ 10%]
+test_entwickler.py::test_validate_python_syntax_valid_code PASSED        [ 12%]
+test_entwickler.py::test_validate_python_syntax_invalid_code PASSED      [ 14%]
+test_entwickler.py::test_validate_python_syntax_empty_string PASSED      [ 16%]
+test_entwickler.py::test_validate_python_syntax_type_hints PASSED        [ 18%]
+test_entwickler.py::test_parse_patch_response_full_file PASSED           [ 20%]
+test_entwickler.py::test_parse_patch_response_no_blocks PASSED           [ 22%]
+test_entwickler.py::test_parse_patch_response_multiple_files PASSED      [ 24%]
+test_entwickler.py::test_load_skills_with_valid_yaml PASSED              [ 26%]
+test_entwickler.py::test_load_skills_empty_dir PASSED                    [ 28%]
+test_entwickler.py::test_load_skills_skips_invalid_yaml PASSED           [ 30%]
+test_entwickler.py::test_get_available_provider_returns_none_when_no_keys PASSED [ 32%]
+test_entwickler.py::test_get_available_provider_returns_provider_when_key_set PASSED [ 34%]
+test_entwickler.py::test_get_available_provider_finds_mistral PASSED     [ 36%]
+test_entwickler.py::test_get_available_provider_finds_cohere PASSED      [ 38%]
+test_entwickler.py::test_get_available_provider_finds_github_models PASSED [ 40%]
+test_entwickler.py::test_call_llm_trims_prompt_to_provider_limit PASSED  [ 42%]
+test_entwickler.py::test_evolution_cycle_returns_none_when_no_api_key PASSED [ 44%]
+test_entwickler.py::test_select_skill_returns_highest_priority PASSED    [ 46%]
+test_entwickler.py::test_select_skill_returns_none_for_empty_list PASSED [ 48%]
+test_entwickler.py::test_select_skill_avoids_recent_journal_categories PASSED [ 50%]
+test_entwickler.py::test_select_skill_varies_over_runs PASSED            [ 52%]
+test_entwickler.py::test_recent_journal_categories_extracts_categories PASSED [ 54%]
+test_entwickler.py::test_recent_journal_categories_respects_max PASSED   [ 56%]
+test_entwickler.py::test_read_markdown_existing_file PASSED              [ 58%]
+test_entwickler.py::test_read_markdown_missing_file PASSED               [ 60%]
+test_entwickler.py::test_revert_patches_restores_content PASSED          [ 62%]
+test_entwickler.py::test_revert_patches_removes_new_files PASSED         [ 64%]
+test_entwickler.py::test_journal_entry_creates_file PASSED               [ 66%]
+test_entwickler.py::test_journal_entry_failure_includes_error PASSED     [ 68%]
+test_entwickler.py::test_journal_entry_prepends_to_existing PASSED       [ 70%]
+test_entwickler.py::test_journal_compaction PASSED                       [ 72%]
+test_entwickler.py::test_journal_no_compaction_when_short PASSED         [ 74%]
+test_entwickler.py::test_self_assess_skill_file_exists PASSED            [ 76%]
+test_entwickler.py::test_all_skill_files_are_valid_yaml PASSED           [ 78%]
+test_entwickler.py::test_llm_providers_have_required_fields PASSED       [ 80%]
+test_entwickler.py::test_llm_providers_list_is_non_empty PASSED          [ 82%]
+test_entwickler.py::test_run_command_success PASSED                      [ 84%]
+test_entwickler.py::test_run_command_failure PASSED                      [ 86%]
+test_entwickler.py::test_run_command_captures_stderr PASSED              [ 88%]
+test_entwickler.py::test_audit_source_for_secrets_passes_on_clean_repo PASSED [ 90%]
+test_entwickler.py::test_audit_source_for_secrets_detects_google_key PASSED [ 92%]
+test_entwickler.py::test_audit_source_for_secrets_detects_openai_key PASSED [ 94%]
+test_entwickler.py::test_audit_source_for_secrets_ignores_env_example PASSED
+```
+
+### Lint [PASS]
+```
+All checks passed!
+
+```
+
+### Secrets [PASS]
+```
+No hardcoded secrets detected
+```
+
+---
 ## Evolution Attempt [SUCCESS] — 20260627-205608
 **Timestamp**: 2026-06-27 20:56:20 UTC  
 **Status**: SUCCESS  
