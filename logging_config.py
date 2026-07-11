@@ -11,9 +11,6 @@ def configure_logging() -> None:
 def log_test_message() -> None:
     """Test the logging setup."""
     logging.info("This is a test log message.")
-
-def setup_logging() -> None:
-    """Centralized logging setup."""
     configure_logging()
 
 from logging_setup import setup_logging
