@@ -13,3 +13,8 @@ def log_test_message() -> None:
     configure_logging()
     
     logging.info("Logging configuration is set up.")
+
+def setup_logging() -> None:
+    """Ensure logging is set up before use."""
+    if not logging.root.handlers:
+        configure_logging()
