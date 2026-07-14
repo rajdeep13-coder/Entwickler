@@ -4,10 +4,8 @@ from rich.console import Console
 
 
 def log_test_message() -> None:
-    configure_logging()
-    
     logging.info("Logging configuration is set up.")
-def configure_logging() -> None:
+    
     """Configure logging with RichHandler."""
 def configure_logging() -> None:
     """Configure logging with RichHandler if not already configured."""
