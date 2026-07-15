@@ -8,8 +8,7 @@ def log_test_message() -> None:
     
     """Log a test message to confirm logging is configured."""
     """Configure logging with RichHandler."""
-def configure_logging() -> None:
-    """Configure logging with RichHandler if not already configured."""
+    """Log a test message to confirm logging is configured."""  
     if not logging.root.handlers:
         logging.basicConfig(level=logging.INFO, handlers=[RichHandler()])
         logging.info("Logging configuration is set up.")
