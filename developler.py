@@ -5,6 +5,6 @@ def main() -> None:
     configure_logging()
     # Your existing main code follows...
     logging.info("Test logging message")
-    # Ensure logging is working as expected
+    
 
     # Your existing main code follows...
