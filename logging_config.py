@@ -4,7 +4,6 @@ from rich.console import Console
 
 
 def log_test_message() -> None:
-    logging.info("Logging configuration is set up.")
     """Log a test message to confirm logging is configured."""
     """Log a test message to confirm logging is configured."""
     """Log a test message to confirm logging is configured."""  
