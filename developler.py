@@ -5,8 +5,6 @@ def main() -> None:
     configure_logging()
     logging.getLogger().info("Logging configuration is set up.")
     logging.info("Test logging message")
-    # Your existing main code follows...
-    logging.info("Test logging message")
     
 
     # Your existing main code follows...
