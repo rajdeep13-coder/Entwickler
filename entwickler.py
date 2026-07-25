@@ -111,6 +111,15 @@ _SCANNABLE_EXTENSIONS: set[str] = {
 # Ordered by preference: fastest/cheapest first, most capable last as fallback.
 LLM_PROVIDERS: list[dict[str, Any]] = [
     {
+        "name": "nvidia-nim",
+        "model": "openai/meta/llama-3.3-70b-instruct",
+        "env_key": "NVIDIA_API_KEY",
+        "api_base": "https://integrate.api.nvidia.com/v1",
+        "max_tokens": 4096,
+        "max_input_tokens": 8192,
+        "cost_per_1k_input": 0.0,
+    },
+    {
         "name": "groq-llama3",
         "model": "groq/llama-3.3-70b-versatile",
         "env_key": "GROQ_API_KEY",
@@ -443,6 +452,7 @@ SELF_ASSESS_SYSTEM = textwrap.dedent("""\
       AVOID proposing the same category again — pick something different.
     - Cycle through ALL categories over time: test, bug, architecture, performance, ux, feature.
     - Security is already RESOLVED — do NOT propose security improvements.
+    - Logging is already RESOLVED — do NOT propose logging improvements or add any new logging configuration files.
 
     Rules for reading the journal:
     - If the most recent journal entry records a FAILURE for the same category as your top candidate improvement, deprioritize that category and pick the next most impactful improvement instead.
