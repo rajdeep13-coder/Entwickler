@@ -2,6 +2,49 @@
 
 
 ---
+## Evolution Attempt [FAILURE] — 20260814-090211
+**Timestamp**: 2026-08-14 09:28:48 UTC  
+**Status**: FAILURE  
+**Priority**: MEDIUM  
+**Category**: refactor  
+**Title**: Simplify and Standardize Logging Setup  
+
+### Rationale
+Streamlining logging setup will make the code more maintainable and easier to understand, as duplicate setup logic in `developler.py` and `path/to/logging_utils.py` can be unified into a single, reusable function.
+
+### Approach
+Extract the logging setup logic into a separate function in `logging_utils.py`, then call this function from `developler.py` and `entwickler.py` to configure logging.
+
+### Error
+```
+Traceback (most recent call last):
+  File "/home/runner/work/Entwickler/Entwickler/entwickler.py", line 1059, in evolution_cycle
+    patches = generate_patch(assessment, context["sources"])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Entwickler/Entwickler/entwickler.py", line 648, in generate_patch
+    response = call_llm(prompt, system=PATCH_SYSTEM, max_tokens=6144)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Entwickler/Entwickler/entwickler.py", line 301, in call_llm
+    raise RuntimeError("All LLM providers failed:\n" + "\n".join(last_errors))
+RuntimeError: All LLM providers failed:
+nvidia-nim: litellm.InternalServerError: InternalServerError: OpenAIException - Connection error.
+groq-llama3: litellm.RateLimitError: RateLimitError: GroqException - {"error":{"message":"Request too large for model `llama-3.3-70b-versatile` in organization `org_01kk5qhrp0etgt9syan2cg63zd` service tier `on_demand` on tokens per minute (TPM): Limit 12000, Requested 12919, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing","type":"tokens","code":"rate_limit_exceeded"}}
+
+groq-llama3-fast: litellm.RateLimitError: RateLimitError: GroqException - {"error":{"message":"Request too large for model `llama-3.1-8b-instant` in organization `org_01kk5qhrp0etgt9syan2cg63zd` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 9739, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing","type":"tokens","code":"rate_limit_exceeded"}}
+
+gemini-flash: litellm.NotFoundError: GeminiException - {
+  "error": {
+    "code": 404,
+    "message": "This model models/gemini-2.0-flash is no longer available. Please update your code to use a newer model for the latest features and improvements. We recommend you to use the Interactions API (https://ai.google.dev/gemini-api/docs/migrate-to-interactions).",
+    "status": "NOT_FOUND"
+  }
+}
+
+github-models: litellm.NotFoundError: NotFoundError: GithubException - Error code: 404
+
+```
+
+---
 ## Evolution Attempt [FAILURE] — 20260811-203729
 **Timestamp**: 2026-08-11 21:05:53 UTC  
 **Status**: FAILURE  
